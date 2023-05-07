@@ -7,8 +7,7 @@ let customerName = "You";
 let chatbotAPI = "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer";
 
 const currentUrl = window.location.href;
-// const publicId = currentUrl.split("/").pop(); // public ID of chatbot
-const publicId = "71ea43c6-b108-4c50-bf36-fe86d500a819";
+const publicId = currentUrl.split("/").pop(); // public ID of chatbot
 
 const chatHistory = document.getElementById("chat-history");
 const sendBtn = document.getElementById("send-btn");
