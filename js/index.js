@@ -7,7 +7,11 @@ let customerName = "You";
 let chatbotAPI = "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer";
 
 const currentUrl = window.location.href;
-const publicId = currentUrl.split("/").pop(); // public ID of chatbot
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+
+const publicId = (urlParams.get("publicId")) == null ? undefined :
+    urlParams.get("publicId"); // public ID of chatbot
 
 const chatHistory = document.getElementById("chat-history");
 const sendBtn = document.getElementById("send-btn");
@@ -56,6 +60,12 @@ function initializeBot() {
 
     if (mainView) mainView.style.display = "none"; // Hide main view
     if (loadingView) loadingView.style.display = "flex"; // Show loading view
+
+    // If no public id, show error
+    if (!publicId) {
+        showError(loadingView, "Error: Invalid Bot");
+        return;
+    }
     // Get the bot information. 
     fetch(`${chatbotAPI}/bot-info-public?publicId=${publicId}`)
         .then(response => response.json())
@@ -88,9 +98,9 @@ function updateHeader(botInfo) {
     document.title = botInfo.name;
 }
 
-function showError(element) {
+function showError(element, text) {
     if (element) {
-        element.innerHTML = "Error: Chatbot not found"
+        element.innerHTML = text ? text : "Error: Chatbot not found"
         element.style.color = "#D2042D";
     }
 }
