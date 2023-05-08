@@ -12,6 +12,8 @@ const urlParams = new URLSearchParams(queryString);
 
 const publicId = (urlParams.get("publicId")) == null ? undefined :
     urlParams.get("publicId"); // public ID of chatbot
+const showHeader = (urlParams.get("header")) == null ? undefined :
+    urlParams.get("header");
 
 const chatHistory = document.getElementById("chat-history");
 const sendBtn = document.getElementById("send-btn");
@@ -99,8 +101,7 @@ function initializeBot() {
 function updateHeader(botInfo, publicId) {
     // Check if header should be shown or not.
     // Embeded on websites don't show header
-    const scriptTag = document.getElementById(publicId);
-    if (scriptTag && scriptTag.title == "embed") {
+    if (showHeader && showHeader == "none") {
         header.style.display = "none";
     }
     if (header) {
