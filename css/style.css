@@ -47,6 +47,7 @@ body {
     flex-direction: row;
     justify-content: center;
     align-items: center;
+    display: none; /* not show header*/
     /* border: 1px solid black; */
     /* background-color: #f4f6ff; */
     background-color: white;

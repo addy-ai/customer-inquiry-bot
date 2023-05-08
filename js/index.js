@@ -98,19 +98,7 @@ function initializeBot() {
         })
 }
 
-function updateHeader(botInfo, publicId) {
-    // Check if header should be shown or not.
-    // Embeded on websites don't show header
-    const iframeElement = window.frameElement;
-    if (iframeElement) {
-      const iframeSrc = iframeElement.src;
-      if (iframeSrc.includes("header=none")) {
-        header.style.display = "none";
-      }
-      console.log("Iframe src:", iframeSrc);
-    } else {
-      console.error("Iframe element not found");
-    }
+function updateHeader(botInfo) {
     if (header) {
         header.innerHTML = botInfo.name;
     }
