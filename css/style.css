@@ -14,7 +14,7 @@ body {
 }
 
 #chat-history {
-    padding-top: 95px;
+    padding-top: 50px;
     overflow-y: scroll;
     padding-left: 10px;
     padding-right: 10px;
