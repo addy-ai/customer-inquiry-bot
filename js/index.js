@@ -75,11 +75,11 @@ function initializeBot() {
                 showError(loadingView);
                 return;
             }
-            if (!botInfo.published) {
-                // Bot not published
-                showError(loadingView);
-                return;
-            }
+            // if (!botInfo.published) {
+            //     // Bot not published
+            //     showError(loadingView);
+            //     return;
+            // }
             // Bot info is available
             chatbotName = botInfo.name; // set name
             chatbotAvatarURL = botInfo.avatarURL; // set avatar URL
