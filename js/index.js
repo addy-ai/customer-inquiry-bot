@@ -75,9 +75,15 @@ function initializeBot() {
                 showError(loadingView);
                 return;
             }
+            if (!botInfo.published) {
+                // Bot not published
+                showError(loadingView);
+                return;
+            }
             // Bot info is available
             chatbotName = botInfo.name; // set name
             chatbotAvatarURL = botInfo.avatarURL; // set avatar URL
+            
             // Show the bot view, then get first message
             if (loadingView) loadingView.style.display = "none";
             if (mainView) mainView.style.display = "block";
@@ -96,6 +102,10 @@ function updateHeader(botInfo) {
     }
     // Change title
     document.title = botInfo.name;
+}
+
+function checkIfBotIsPublished(botInfo, loadingView) {
+
 }
 
 function showError(element, text) {
