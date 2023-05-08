@@ -96,7 +96,13 @@ function initializeBot() {
         })
 }
 
-function updateHeader(botInfo) {
+function updateHeader(botInfo, publicId) {
+    // Check if header should be shown or not.
+    // Embeded on websites don't show header
+    const scriptTag = document.getElementById(publicId);
+    if (scriptTag && scriptTag.title == "embed") {
+        header.style.display = "none";
+    }
     if (header) {
         header.innerHTML = botInfo.name;
     }
