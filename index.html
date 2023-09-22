@@ -5,21 +5,62 @@
     <meta charset="UTF-8">
     <title>Customer Inquiry Bot by Addy AI</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- <script src="https://cdn.jsdelivr.net/gh/addy-ai/cdn-scripts@latest/customer-inquiry-bot/js/index.min.js"
-        id="hello" title="embed"></script> -->
 </head>
 
 <body>
-    <div class="main-container">
-        <div id="addy-ai-cib-header" class="header-container">
+    <div class="main-container chatbot-container">
+        <div id="addy-ai-cib-header" class="header">
+            <p>Holi-dontics Assistant</p>
         </div>
-        <div class="chat-container">
+        
+        <div class="chat-container chat-div">
             <div id="chat-history">
-    
+                <div class="bot-message-container">
+                    <div class="bot-profile-photo">
+                        <img src="https://i.imgur.com/xoP7CyF.png" alt="A.I." width="24" height="24"/>
+                    </div>
+                    <div class="bot-message">
+                        <p>Hello 👋</p>
+                    </div>
+                </div>
+                
+                <div class="user-message-container">
+                    <div class="user-profile-photo">
+                        <img src="https://i.imgur.com/WjAIvVp.png" alt="You" width="35" height="35"/>
+                    </div>
+                    <div class="user-message">
+                        <p>Who are you?</p>
+                    </div>
+                </div>
+                
+                <div class="bot-message-container">
+                    <div class="bot-profile-photo">
+                        <img src="https://i.imgur.com/xoP7CyF.png" alt="A.I." width="24" height="24"/>
+                    </div>
+                    <div class="bot-message">
+                        <p>I am a virtual assistant here to help answer your questions</p>
+                    </div>
+                </div>
             </div>
-            <div class="input-container">
-                <input type="text" id="message-input" maxlength="1000" placeholder="ask me anything...">
-                <button id="send-btn">Send</button>
+            
+            <div class="auto-prompts-container">
+                <div class="auto-prompt">
+                    <p>Auto Prompt 1</p>
+                </div>
+                <div class="auto-prompt">
+                    <p>Auto Prompt 2</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="input-container chat-buttons-div">
+            <input type="text" id="message-input" class="no-border-input" maxlength="1000" placeholder="Ask me anything..."/>
+            <div class="send-button-container">
+                <button id="send-btn">
+                    <svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="m13.7612096 12.010246-10.76006891-1.0841632-.00114067-6.85217554c-.00009872-.59300388.48054588-1.07380853 1.07354976-1.07390725.16675147-.00002775.33121768.038783.48036473.11335653l15.85230779 7.92615386c.5303988.2651994.7453854.9101592.480186 1.440558-.1038883.2077764-.2723589.376257-.4801292.4801576l-15.84996765 7.9261566c-.5303831.2652308-1.1753556.0502824-1.4405864-.4801007-.07454342-.1490647-.11336284-.3134359-.11338495-.4801003l-.00090941-6.8526417z" fill="white"/>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
@@ -29,7 +70,6 @@
         <p>Loading...</p>
     </div>
     
-
     <script type="text/javascript" src="js/index.js"></script>
 </body>
 
