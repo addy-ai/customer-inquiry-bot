@@ -1,3 +1,5 @@
+console.log('starting on index.js')
+
 let chatbotName = undefined;
 let chatbotAvatarURL = undefined;
 let customerAvatarURL = "https://i.imgur.com/vphoLPW.png";
@@ -14,7 +16,7 @@ const showHeader = urlParams.get("header") || undefined;
 const chatHistory = document.querySelector("#chat-history");
 const sendBtn = document.querySelector("#send-btn");
 const messageInput = document.querySelector("#message-input");
-const container = document.querySelector(".main-container");
+const container = document.querySelector(".chatbox-container");
 const header = document.querySelector(".header");
 
 sendBtn.disabled = true;
@@ -54,6 +56,7 @@ function createBotMessageElement(message, botInfo) {
 }
 
 function initializeBot() {
+    console.log('loading bot')
     const loadingView = document.querySelector(".loading-view");
     if (container) container.style.display = "none";
     if (loadingView) loadingView.style.display = "flex";
@@ -154,8 +157,9 @@ messageInput.addEventListener('input', () => {
     sendBtn.disabled = trimmedValue.length <= 1;
 });
 
+// Update the class names and structure to match the new CSS
 const customerMessageHTML = `
-    <div class="user-message">
+    <div class="user-message-container">
         <div class="user-profile-photo">
             <img src="${customerAvatarURL}" alt="You" width="35" height="35"/>
         </div>
@@ -168,7 +172,7 @@ const customerMessageHTML = `
 const chatbotMessageHTML = `
     <div class="bot-message-container">
         <div class="bot-profile-photo">
-            <img src="{{chatbotAvatarURL}}" alt="A.I." width="24" height="24"/>
+            <div style="background-color: #745dde; width: 35px; height: 35px; border-radius: 50%;"></div>
         </div>
         <div class="bot-message">
             <p id="{{messageId}}">{{message}}</p>
@@ -179,7 +183,7 @@ const chatbotMessageHTML = `
 const chatbotThinking = `
     <div class="bot-message-container">
         <div class="bot-profile-photo">
-            <img src="{{chatbotAvatarURL}}" alt="A.I." width="24" height="24"/>
+            <div style="background-color: #745dde; width: 35px; height: 35px; border-radius: 50%;"></div>
         </div>
         <div class="bot-message">
             <p>thinking...</p>

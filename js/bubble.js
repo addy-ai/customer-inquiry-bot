@@ -1,167 +1,210 @@
-const CHAT_BUBBLE_SIZE = 60;
-const PRIMARY_COLOR = "#745DDE";
-const CHAT_ICON_SRC = "https://i.imgur.com/lgFKiDS.png";
-const CHAT_CLOSE_ICON_SRC = "https://i.imgur.com/hxm4A15.png";
 const scriptTag = document.currentScript;
+window.chatbotScriptLoaded = false;
+window.isChatbotFirstClick = true;
 
-alert('hi')
-
-let scriptLoaded = false;
-
-const bubble = document.createElement("div");
-bubble.style.backgroundColor = PRIMARY_COLOR;
-bubble.style.position = "fixed";
-bubble.style.cursor = "pointer";
-bubble.style.bottom = "25px";
-bubble.style.right = "20px";
-bubble.style.left = "none";
-bubble.style.width = `${CHAT_BUBBLE_SIZE}px`;
-bubble.style.height = `${CHAT_BUBBLE_SIZE}px`;
-bubble.style.borderRadius = `${Math.round(CHAT_BUBBLE_SIZE / 2)}px`;
-bubble.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
-bubble.style.display = "flex";
-bubble.style.alignItems = "center";
-bubble.style.justifyContent = "center";
-bubble.setAttribute("id", "addy-chat-bubble");
-
-
-bubble.style.zIndex = 999999999;
-bubble.style.transition = "0.3s all ease";
-
-
-const chatIcon = document.createElement("img");
-chatIcon.setAttribute("src", CHAT_ICON_SRC);
-chatIcon.style.width = "60%";
-chatIcon.style.height = "60%";
-chatIcon.style.objectFit = "contain";
-
-
-const closeIcon = document.createElement("img");
-closeIcon.setAttribute("src", CHAT_CLOSE_ICON_SRC);
-closeIcon.style.width = "40%";
-closeIcon.style.height = "40%";
-closeIcon.style.objectFit = "contain";
-closeIcon.style.display = "none"; // Do not display in first load
-
-bubble.append(chatIcon);
-bubble.append(closeIcon);
-
-const notification = document.createElement("div");
-notification.style.position = "absolute";
-notification.style.top = "-7px";
-notification.style.right = "-1px";
-notification.style.width = "20px";
-notification.style.height = "20px";
-notification.style.display = "flex";
-notification.style.alignItems = "center";
-notification.style.justifyContent = "center";
-notification.style.borderRadius = "50%";
-notification.style.backgroundColor = "#FA3E3E";
-notification.style.color = "#FFFFFF";
-notification.style.zIndex = 99999999;
-notification.style.fontSize = "12px";
-notification.innerHTML = "1";
-bubble.append(notification);
-
-let isFirstClick = true;
-
-function handleSmallScreens() {
-    window.innerHeight < 600 && (chatWindow.style.height = "70vh");
-}
-
-// Event listeners
-bubble.addEventListener("mouseenter", () => {
-    bubble.style.transform = "scale(1.05)";
-});
-bubble.addEventListener("mouseleave", () => {
-    bubble.style.transform = "scale(1)";
-});
-
-bubble.addEventListener("click", () => {
-    if (isFirstClick) {
-        isFirstClick = false;
-        notification.style.display = "none";
-    }
-
-    if (chatWindow.style.display === "none") {
-        chatWindow.style.display = "flex";
-        chatIcon.style.display = "none";
-        closeIcon.style.display = "block";
-    } else {
-        chatWindow.style.display = "none";
-        closeIcon.style.display = "none";
-        chatIcon.style.display = "block";
-    }
-});
-
-const chatWindow = document.createElement("div");
-chatWindow.setAttribute("id", "chat-bubble-window");
-chatWindow.style.position = "fixed";
-chatWindow.style.flexDirection = "column";
-chatWindow.style.justifyContent = "space-between";
-chatWindow.style.bottom = "95px";
-chatWindow.style.width = "85vw";
-chatWindow.style.height = "70vh";
-chatWindow.style.boxShadow = "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px";
-chatWindow.style.display = "none";
-chatWindow.style.borderRadius = "10px";
-chatWindow.style.zIndex = 99999999;
-chatWindow.style.overflow = "hidden";
-chatWindow.style.right = "20px";
-chatWindow.style.left = "none";
-chatWindow.style.backgroundColor = "#FFFFFF";
-window.addEventListener("resize", handleSmallScreens);
-handleSmallScreens();
-
-
-
-async function initialize() {
-    chatWindow.innerHTML = `<iframe
-      src="https://addy-ai.github.io/customer-inquiry-bot/?publicId=${scriptTag.id}&header=none"
-      width="100%"
-      height="100%"
-      frameborder="0"
-      ></iframe>`;
-    document.body.append(chatWindow);
-    await getChatBotData();
-}
-
-async function getChatBotData() {
-    // Make a fetch request.
-    document.body.append(bubble);
-}
-
+// 0. Init the steps
 window.addEventListener("load", async function() {
-    try {
-        await initialize();
-        scriptLoaded = true;
+    try { 
+        // 1. Get info for bubble and chatbox
+        let data =  await getChatBotData();
+
+        data.color ||= "#745DDE";
+        data.icon ||= "https://i.imgur.com/lgFKiDS.png";
+        data.name ||= "Addy"; 
+        data.publicId ||= scriptTag.id;
+        data.host ||= window.location.host;
+        data.uuid ||= localStorage.getItem("uuid") || undefined;
+        data.header ||= "none";
+        data.prompts ||= ['Track my package','Ask about a product'];
+
+        console.table({data})
+
+        // 2. Create Chatbox and append to body
+        let chatbox = createChatbox(data);
+
+        // 3. Create Bubble Components and append to body, to toggle chatbox
+        createBubbleComponents(chatbox, data); 
+
+        chatbotScriptLoaded = true;
         console.log("Addy AI Chatbot successfully loaded.");
     } catch (error) {
         console.error("Error:", error);
     }
 });
 
-// Use the window.onerror event handler to attempt loading the script again if an error occurs.
-window.onerror = async function (message, source, lineno, colno, error) {
-    if (!scriptLoaded) {
-        try {
-            await initialize();
-            scriptLoaded = true;
-            console.log("CDN script loaded successfully after an error.");
-        } catch (error) {
-            console.error("Error:", error);
+// 1. Retrieve Business Information passing scriptTag.id, location.host, and a retrieved or created uuid to Backend.
+async function getChatBotData() { 
+    let backend = url = window.location.host === ''
+    ? "http://127.0.0.1:5003/hey-addy-chatgpt/us-central1/knowledgeBase"
+    : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/knowledgeBase" 
+    try {
+        /*
+        const response = await fetch(backend, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                publicId: scriptTag.id,
+                host: window.location.host,
+                uuid: localStorage.getItem("uuid") || undefined
+            })
+        }); 
+        */
+        // Await the response from the fetch call
+        const response = await fetch(url);
+        
+        // Check if the response is ok (status code 200-299)
+        if (!response.ok) {
+            // Throw an error if the response is not ok
+            throw new Error(`HTTP error! Status: ${response.status}`);
         }
-    }
-};
-
-const screenSizeQuery = window.matchMedia("(min-width: 550px)");
-
-function handleScreenSizeChange(event) {
-    if (event.matches) {
-        chatWindow.style.height = "600px";
-        chatWindow.style.width = "480px";
+        
+        // Await the response JSON
+        const data = await response.json(); 
+        return data
+    } catch (error) {
+        // Log any errors that occur during the fetch to the console
+        console.error('Fetching data failed:', error);
+        return {}
     }
 }
+// 2. Create the Chatbox which is shown on-click
+function createChatbox(data) { 
+    const url = window.location.host === '' 
+    let slug = `?publicId=${scriptTag.id}&header=none&data=${encodeURIComponent(JSON.stringify(data))}`
+    ? `file://${window.location.pathname.replace('testpage.html', 'index.html')}${slug}` 
+    : `https://addy-ai.github.io/customer-inquiry-bot/${slug}`; 
 
-screenSizeQuery.addEventListener("change", handleScreenSizeChange);
-handleScreenSizeChange(screenSizeQuery);
+    /*
+    console.table({host:window.location.host, path:window.location.pathname, url, 'scriptTag': scriptTag.id}) 
+    console.log({url}) */
+    const chatBox = document.createElement("div");
+    chatBox.setAttribute("id", "chatBubbleWindow"); 
+    Object.assign(chatBox.style, {
+      position: "fixed",  
+      zIndex: 99999999,
+      bottom: "95px",  
+      right: "20px",
+      left: "none",
+      display: "block",
+      boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px", 
+      overflow: "hidden", 
+      borderTopLeftRadius: "20px", 
+    });
+    chatBox.innerHTML = `<iframe src="${url}"></iframe>`;
+    document.body.append(chatBox);
+
+    function handleSmallScreens() {
+        window.innerHeight < 600 && (chatBox.style.height = "70vh");
+    }
+    window.addEventListener("resize", handleSmallScreens);
+    handleSmallScreens();
+    
+    const screenSizeQuery = window.matchMedia("(min-width: 550px)");
+    
+    function handleScreenSizeChange(event) {
+        if (event.matches) {
+            chatBox.style.height = "600px";
+            chatBox.style.width = "480px";
+        }
+    }
+    screenSizeQuery.addEventListener("change", handleScreenSizeChange);
+    handleScreenSizeChange(screenSizeQuery);
+    return chatBox
+}
+function createNotification() { 
+    const notification = document.createElement("div");
+    notification.innerHTML = "1"; 
+    Object.assign(notification.style, {
+        position: "absolute",
+        top: "-7px",
+        right: "-1px",
+        width: "20px",
+        height: "20px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: "50%",
+        backgroundColor: "#FA3E3E",
+        color: "#FFFFFF",
+        zIndex: 99999999,
+        fontSize: "12px"
+    });
+    return notification
+}
+function createCloseIcon() {  
+    const closeIcon = document.createElement("img");
+    closeIcon.setAttribute("src", "https://i.imgur.com/hxm4A15.png");
+    Object.assign(closeIcon.style, { 
+        width: "40%", 
+        height: "40%", 
+        objectFit: "contain", 
+        display: "none" 
+    });
+    return closeIcon
+}
+function createChatIcon() {  
+    const chatIcon = document.createElement("img");
+    chatIcon.setAttribute("src", "https://i.imgur.com/lgFKiDS.png");
+    Object.assign(chatIcon.style, { 
+        width: "60%", 
+        height: "60%", 
+        objectFit: "contain" 
+    });
+    return chatIcon
+}
+function createBubble(data){
+    const CHAT_BUBBLE_SIZE = 60; 
+    
+    const bubble = document.createElement("div");
+    bubble.setAttribute("id", "addy-chat-bubble");
+    Object.assign(bubble.style, {
+        backgroundColor: data.color,
+        position: "fixed",
+        cursor: "pointer",
+        bottom: "25px",
+        right: "20px",
+        left: "none",
+        width: `${CHAT_BUBBLE_SIZE}px`,
+        height: `${CHAT_BUBBLE_SIZE}px`,
+        borderRadius: `${Math.round(CHAT_BUBBLE_SIZE / 2)}px`,
+        boxShadow: "rgba(0, 0, 0, 0.24) 0px 3px 8px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 999999999,
+        transition: "0.3s all ease"
+    }); 
+    return bubble
+}
+
+// 3. Create the Bubble Components which are shown on-start
+function createBubbleComponents(chatbox, data) {  
+    console.log({chatbox})
+    let bubble = createBubble(data);    
+    
+    let chatIcon = createChatIcon(); bubble.append(chatIcon);
+    let closeIcon = createCloseIcon(); bubble.append(closeIcon);
+    let notification = createNotification(); bubble.append(notification);
+    document.body.append(bubble);
+
+    // Event listeners
+    bubble.addEventListener("mouseenter", () => { bubble.style.transform = "scale(1.05)"; });
+    bubble.addEventListener("mouseleave", () => { bubble.style.transform = "scale(1)"; });
+    bubble.addEventListener("click", () => {
+        if (isChatbotFirstClick) {
+            isChatbotFirstClick = false;
+            notification.style.display = "none";
+        }
+        if (chatbox.style.display === "none") {
+            chatbox.style.display = "flex";
+            chatIcon.style.display = "none";
+            closeIcon.style.display = "block";
+        } else {
+            chatbox.style.display = "none";
+            closeIcon.style.display = "none";
+            chatIcon.style.display = "block";
+        }
+    });
+}
