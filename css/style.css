@@ -101,7 +101,7 @@ body {
 }
 
 .user-message {
-    background-color: #745DDE;
+    background-color: var(--user-message-color);
     color: #fff;
 }
 
@@ -125,7 +125,7 @@ body {
 }
 
 .send-button-container {
-    background-color: #745dde;
+    background-color: var(--user-message-color);
     border-radius: 5px;
     display: flex;
     align-items: center;

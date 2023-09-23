@@ -11,34 +11,8 @@ window.addEventListener("load", async function () {
             // Some error occured
             return;
         }
-        /**
-            data returns
-            {
-                "chatbotName": appName,
-                "welcomeMessage": "Hello! How can I help you today?",
-                "inputPlaceholder": "Ask me anything...",
-                "quickPrompts": [
-                    {
-                        "id": "",
-                        "title": "",
-                        "prompt": "",
-                    },
-                ],
-                "primaryColor": "#745DDE",
-                "primaryColorName": "Purple",
-            };
-         */
 
-        data.color ||= "#745DDE";
-        data.icon ||= "https://i.imgur.com/lgFKiDS.png";
-        data.name ||= "Addy";
-        data.publicId ||= scriptTag.id;
-        data.host ||= window.location.host;
-        data.uuid ||= localStorage.getItem("uuid") || undefined;
-        data.header ||= "none";
-        data.prompts ||= ['Track my package', 'Ask about a product'];
-
-        console.table({ data })
+        // console.table({ data })
 
         // 2. Create Chatbox and append to body
         let chatbox = createChatbox(data);
@@ -61,26 +35,58 @@ async function getChatBotData() {
 
     const publicId = scriptTag.id;
     const host = window.location.host;
-    const response = await fetch(`${backend}/?publicId=${publicId}&host=${host}`, {
+    const data = await fetch(`${backend}/?publicId=${publicId}&host=${host}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json"
         }
     }).then((response) => response.json())
         .then(data => {
-            console.log(data.data);
+            // console.log(data.data);
             return data.data;
         }).catch((error) => {
             console.error("Error", error);
             return undefined;
         });
-    return response;
+
+        /**
+            data returns
+            {
+                "chatbotName": appName,
+                "welcomeMessage": "Hello! How can I help you today?",
+                "inputPlaceholder": "Ask me anything...",
+                "quickPrompts": [
+                    {
+                        "id": "",
+                        "title": "",
+                        "prompt": "",
+                    },
+                ],
+                "primaryColor": "#745DDE",
+                "primaryColorName": "Purple",
+            };
+         */
+    data.avatarURL ||= "https://i.imgur.com/lgFKiDS.png";
+    data.name ||= "My Chatbot"
+    data.chatbotName ||= "Addy";
+    data.welcomeMessage ||= "Hello! How can I help you today?";
+    data.inputPlaceholder ||= "Ask me anything...";
+    data.quickPrompts ||= [ 
+        { "id": "1", "title": "help", "prompt": "How can you help?", }, 
+        { "id": "2", "title": "order", "prompt": "Find my order.", },
+    ];
+    data.primaryColor ||= "#745DDE";
+    data.primaryColorName ||= "Purple";
+    data.publicId = scriptTag.id;
+    data.host = window.location.host; 
+
+    return data;
 }
 
 // 2. Create the Chatbox which is shown on-click
 function createChatbox(data) {
-    const url = window.location.host === ''
     let slug = `?publicId=${scriptTag.id}&header=none&data=${encodeURIComponent(JSON.stringify(data))}`
+    const url = window.location.host === ''
         ? `file://${window.location.pathname.replace('testpage.html', 'index.html')}${slug}`
         : `https://addy-ai.github.io/customer-inquiry-bot/${slug}`;
 
@@ -95,7 +101,7 @@ function createChatbox(data) {
         bottom: "95px",
         right: "20px",
         left: "none",
-        display: "block",
+        display: "none",
         boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
         overflow: "hidden",
         borderTopLeftRadius: "20px",
@@ -168,7 +174,7 @@ function createBubble(data) {
     const bubble = document.createElement("div");
     bubble.setAttribute("id", "addy-chat-bubble");
     Object.assign(bubble.style, {
-        backgroundColor: data.color,
+        backgroundColor: data.primaryColor,
         position: "fixed",
         cursor: "pointer",
         bottom: "25px",
@@ -189,7 +195,7 @@ function createBubble(data) {
 
 // 3. Create the Bubble Components which are shown on-start
 function createBubbleComponents(chatbox, data) {
-    console.log({ chatbox })
+    // console.log({ chatbox })
     let bubble = createBubble(data);
 
     let chatIcon = createChatIcon(); bubble.append(chatIcon);
