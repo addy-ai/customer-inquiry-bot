@@ -3,27 +3,48 @@ window.chatbotScriptLoaded = false;
 window.isChatbotFirstClick = true;
 
 // 0. Init the steps
-window.addEventListener("load", async function() {
-    try { 
+window.addEventListener("load", async function () {
+    try {
         // 1. Get info for bubble and chatbox
-        let data =  await getChatBotData();
+        let data = await getChatBotData();
+        if (!data) {
+            // Some error occured
+            return;
+        }
+        /**
+            data returns
+            {
+                "chatbotName": appName,
+                "welcomeMessage": "Hello! How can I help you today?",
+                "inputPlaceholder": "Ask me anything...",
+                "quickPrompts": [
+                    {
+                        "id": "",
+                        "title": "",
+                        "prompt": "",
+                    },
+                ],
+                "primaryColor": "#745DDE",
+                "primaryColorName": "Purple",
+            };
+         */
 
         data.color ||= "#745DDE";
         data.icon ||= "https://i.imgur.com/lgFKiDS.png";
-        data.name ||= "Addy"; 
+        data.name ||= "Addy";
         data.publicId ||= scriptTag.id;
         data.host ||= window.location.host;
         data.uuid ||= localStorage.getItem("uuid") || undefined;
         data.header ||= "none";
-        data.prompts ||= ['Track my package','Ask about a product'];
+        data.prompts ||= ['Track my package', 'Ask about a product'];
 
-        console.table({data})
+        console.table({ data })
 
         // 2. Create Chatbox and append to body
         let chatbox = createChatbox(data);
 
         // 3. Create Bubble Components and append to body, to toggle chatbox
-        createBubbleComponents(chatbox, data); 
+        createBubbleComponents(chatbox, data);
 
         chatbotScriptLoaded = true;
         console.log("Addy AI Chatbot successfully loaded.");
@@ -33,64 +54,51 @@ window.addEventListener("load", async function() {
 });
 
 // 1. Retrieve Business Information passing scriptTag.id, location.host, and a retrieved or created uuid to Backend.
-async function getChatBotData() { 
+async function getChatBotData() {
     let backend = url = window.location.host === ''
-    ? "http://127.0.0.1:5003/hey-addy-chatgpt/us-central1/knowledgeBase"
-    : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/knowledgeBase" 
-    try {
-        /*
-        const response = await fetch(backend, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                publicId: scriptTag.id,
-                host: window.location.host,
-                uuid: localStorage.getItem("uuid") || undefined
-            })
-        }); 
-        */
-        // Await the response from the fetch call
-        const response = await fetch(url);
-        
-        // Check if the response is ok (status code 200-299)
-        if (!response.ok) {
-            // Throw an error if the response is not ok
-            throw new Error(`HTTP error! Status: ${response.status}`);
+        ? "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer/bot-info-public"
+        : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer/bot-info-public"
+
+    const publicId = scriptTag.id;
+    const host = window.location.host;
+    const response = await fetch(`${backend}/?publicId=${publicId}&host=${host}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
         }
-        
-        // Await the response JSON
-        const data = await response.json(); 
-        return data
-    } catch (error) {
-        // Log any errors that occur during the fetch to the console
-        console.error('Fetching data failed:', error);
-        return {}
-    }
+    }).then((response) => response.json())
+        .then(data => {
+            console.log(data.data);
+            return data.data;
+        }).catch((error) => {
+            console.error("Error", error);
+            return undefined;
+        });
+    return response;
 }
+
 // 2. Create the Chatbox which is shown on-click
-function createChatbox(data) { 
-    const url = window.location.host === '' 
+function createChatbox(data) {
+    const url = window.location.host === ''
     let slug = `?publicId=${scriptTag.id}&header=none&data=${encodeURIComponent(JSON.stringify(data))}`
-    ? `file://${window.location.pathname.replace('testpage.html', 'index.html')}${slug}` 
-    : `https://addy-ai.github.io/customer-inquiry-bot/${slug}`; 
+        ? `file://${window.location.pathname.replace('testpage.html', 'index.html')}${slug}`
+        : `https://addy-ai.github.io/customer-inquiry-bot/${slug}`;
 
     /*
     console.table({host:window.location.host, path:window.location.pathname, url, 'scriptTag': scriptTag.id}) 
     console.log({url}) */
     const chatBox = document.createElement("div");
-    chatBox.setAttribute("id", "chatBubbleWindow"); 
+    chatBox.setAttribute("id", "chatBubbleWindow");
     Object.assign(chatBox.style, {
-      position: "fixed",  
-      zIndex: 99999999,
-      bottom: "95px",  
-      right: "20px",
-      left: "none",
-      display: "block",
-      boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px", 
-      overflow: "hidden", 
-      borderTopLeftRadius: "20px", 
+        position: "fixed",
+        zIndex: 99999999,
+        bottom: "95px",
+        right: "20px",
+        left: "none",
+        display: "block",
+        boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
+        overflow: "hidden",
+        borderTopLeftRadius: "20px",
     });
     chatBox.innerHTML = `<iframe src="${url}"></iframe>`;
     document.body.append(chatBox);
@@ -100,9 +108,9 @@ function createChatbox(data) {
     }
     window.addEventListener("resize", handleSmallScreens);
     handleSmallScreens();
-    
+
     const screenSizeQuery = window.matchMedia("(min-width: 550px)");
-    
+
     function handleScreenSizeChange(event) {
         if (event.matches) {
             chatBox.style.height = "600px";
@@ -113,9 +121,9 @@ function createChatbox(data) {
     handleScreenSizeChange(screenSizeQuery);
     return chatBox
 }
-function createNotification() { 
+function createNotification() {
     const notification = document.createElement("div");
-    notification.innerHTML = "1"; 
+    notification.innerHTML = "1";
     Object.assign(notification.style, {
         position: "absolute",
         top: "-7px",
@@ -133,30 +141,30 @@ function createNotification() {
     });
     return notification
 }
-function createCloseIcon() {  
+function createCloseIcon() {
     const closeIcon = document.createElement("img");
     closeIcon.setAttribute("src", "https://i.imgur.com/hxm4A15.png");
-    Object.assign(closeIcon.style, { 
-        width: "40%", 
-        height: "40%", 
-        objectFit: "contain", 
-        display: "none" 
+    Object.assign(closeIcon.style, {
+        width: "40%",
+        height: "40%",
+        objectFit: "contain",
+        display: "none"
     });
     return closeIcon
 }
-function createChatIcon() {  
+function createChatIcon() {
     const chatIcon = document.createElement("img");
     chatIcon.setAttribute("src", "https://i.imgur.com/lgFKiDS.png");
-    Object.assign(chatIcon.style, { 
-        width: "60%", 
-        height: "60%", 
-        objectFit: "contain" 
+    Object.assign(chatIcon.style, {
+        width: "60%",
+        height: "60%",
+        objectFit: "contain"
     });
     return chatIcon
 }
-function createBubble(data){
-    const CHAT_BUBBLE_SIZE = 60; 
-    
+function createBubble(data) {
+    const CHAT_BUBBLE_SIZE = 60;
+
     const bubble = document.createElement("div");
     bubble.setAttribute("id", "addy-chat-bubble");
     Object.assign(bubble.style, {
@@ -175,15 +183,15 @@ function createBubble(data){
         justifyContent: "center",
         zIndex: 999999999,
         transition: "0.3s all ease"
-    }); 
+    });
     return bubble
 }
 
 // 3. Create the Bubble Components which are shown on-start
-function createBubbleComponents(chatbox, data) {  
-    console.log({chatbox})
-    let bubble = createBubble(data);    
-    
+function createBubbleComponents(chatbox, data) {
+    console.log({ chatbox })
+    let bubble = createBubble(data);
+
     let chatIcon = createChatIcon(); bubble.append(chatIcon);
     let closeIcon = createCloseIcon(); bubble.append(closeIcon);
     let notification = createNotification(); bubble.append(notification);
