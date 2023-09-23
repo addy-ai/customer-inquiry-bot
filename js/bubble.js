@@ -40,41 +40,11 @@ async function getChatBotData() {
         headers: {
             "Content-Type": "application/json"
         }
-    }).then((response) => response.json())
-        .then(data => {
-            // console.log(data.data);
-            return data.data;
-        }).catch((error) => {
-            console.error("Error", error);
-            return undefined;
-        });
+    })
+    .then((response) => response.json())
+    .then(data => { return data.data.config;})
+    .catch((error) => { console.error("Error", error); return undefined; });
 
-        /**
-            data returns
-            {
-                "chatbotName": appName,
-                "welcomeMessage": "Hello! How can I help you today?",
-                "inputPlaceholder": "Ask me anything...",
-                "quickPrompts": [
-                    {
-                        "id": "",
-                        "title": "",
-                        "prompt": "",
-                    },
-                ],
-                "primaryColor": "#745DDE",
-                "primaryColorName": "Purple",
-            };
-         */
-    data.avatarURL ||= "https://i.imgur.com/lgFKiDS.png";
-    data.name ||= "My Chatbot"
-    data.chatbotName ||= "Addy";
-    data.welcomeMessage ||= "Hello! How can I help you today?";
-    data.inputPlaceholder ||= "Ask me anything...";
-    data.quickPrompts ||= [ 
-        { "id": "1", "title": "help", "prompt": "How can you help?", }, 
-        { "id": "2", "title": "order", "prompt": "Find my order.", },
-    ];
     data.primaryColor ||= "#745DDE";
     data.primaryColorName ||= "Purple";
     data.publicId = scriptTag.id;
@@ -103,8 +73,8 @@ function createChatbox(data) {
         left: "none",
         display: "none",
         boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
-        overflow: "hidden",
-        borderTopLeftRadius: "20px",
+        overflow: "hidden", 
+        borderRadius: '20px',
     });
     chatBox.innerHTML = `<iframe src="${url}"></iframe>`;
     document.body.append(chatBox);

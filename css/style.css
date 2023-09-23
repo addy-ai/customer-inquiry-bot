@@ -1,17 +1,17 @@
 /* Main Chatbot Container */
 :root{
     --user-message-color: #745DDE;
+    --avatar-url: url('https://i.imgur.com/xoP7CyF.png')
 }
 body {
     margin: 0px;
     font-family: Helvetica, sans-serif;
-    background-color: #efefef;
+    background-color: #fefefe;
 }
 
 .chatbot-container {
     display: flex;
-    flex-direction: column;
-    background-color: #efefef;
+    flex-direction: column; 
     height: 100vh;
     width: 100vw;
     border-radius: 20px;
@@ -32,7 +32,7 @@ body {
 
 /* Chat Div */
 .chat-container {
-    padding: 20px;
+    padding: 20px 8px 20px 12px;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
@@ -45,32 +45,41 @@ body {
     flex-grow: 1;
 }
 
-#chat-history::-webkit-scrollbar {
+#chat-history::-webkit-scrollbar, .auto-prompts-container::-webkit-scrollbar {
     width: 0.5em;
 }
 
-#chat-history::-webkit-scrollbar-track {
+#chat-history::-webkit-scrollbar-track, .auto-prompts-container::-webkit-scrollbar-track{
     background-color: transparent;
 }
 
-#chat-history::-webkit-scrollbar-thumb {
+#chat-history::-webkit-scrollbar-thumb, .auto-prompts-container::-webkit-scrollbar-thumb {
     background-color: #ccc;
     border-radius: 5px;
 }
 
-/* Auto Prompts Container */
+/* Auto Prompts Container */ 
 .auto-prompts-container {
     display: flex;
+    flex-direction: row-reverse;
     gap: 10px;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* Allow wrapping */
+    align-content: flex-start; /* Align content to the start */
+    overflow: auto; /* Hide overflow */
+    overflow-y: scroll;
+    /* max-height: calc(2 * (1em + 10px + 2px)); /* Limit to two lines */
+    padding-bottom: 8px; 
 }
 
 .auto-prompt {
+    flex-shrink: 0; /* Prevent shrinking of the items */
     padding: 5px;
     cursor: pointer;
     border: 1px solid rgba(0, 0, 0, 0.3);
     border-radius: 10px;
+    white-space: nowrap; /* Prevent text wrapping inside .auto-prompt */
 }
+
 
 .auto-prompt p {
     font-size: 14px;
@@ -87,12 +96,15 @@ body {
 
 .bot-message,
 .user-message {
+    background-color: var(--user-message-color);
     padding: 10px;
-    border-radius: 10px;
+    margin-left:8px;  
+    border-radius: 0px 10px 10px 10px;
     min-width: 80px;
     max-width: 85%;
     font-size: 14px;
     line-height: 20px;
+    box-sizing: border-box;
 }
 
 .bot-message {
@@ -111,17 +123,25 @@ body {
     background-color: #F1F4F6;
     border-radius: 10px;
     padding: 4px 5px;
+    margin: 0px 8px 9px 12px;
     box-sizing: border-box;
+}
+#message-input{
+    background: none;
 }
 
 .no-border-input {
-    flex-grow: 1;
-    border: none;
+    width: 100%;
     border-radius: 10px;
-    height: 35px;
-    padding: 0 5px;
     font-size: 14px;
-    background-color: transparent;
+    height: 35px;
+    padding-right: 5px;
+    border: none;
+}
+.no-border-input:focus {
+    outline: none;
+    border-color: transparent;
+    box-shadow: none;
 }
 
 .send-button-container {
@@ -132,13 +152,37 @@ body {
     padding: 0 5px;
 }
 
+#send-btn {
+    background-color: transparent; /* Remove background color */
+    border: none; /* Remove border */
+    outline: none; /* Remove focus outline */
+    cursor: pointer; /* Set cursor to pointer when button is enabled */
+}
+#send-btn:disabled {
+    cursor: not-allowed; /* Set cursor to not-allowed when button is disabled */
+}
+
 /* Profile Photos */
+.bot-profile-photo{
+    background-color: var(--user-message-color); 
+}
 .bot-profile-photo,
 .user-profile-photo {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    overflow: hidden;
+    width: 45px;
+    height: 45px; 
+    overflow: hidden;   
+    border-radius: 50%; 
+} 
+.bot-profile-photo > img{
+    background-color: var(--user-message-color); 
+    width: 35px; 
+    height: 35px; 
+    padding-top: 5px;
+    padding-left: 5px; 
+}
+.user-profile-photo > img {
+    width: 45px; 
+    height: 45px; 
 }
 
 /* Loading Overlay */
