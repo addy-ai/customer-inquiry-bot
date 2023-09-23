@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <title>Customer Inquiry Bot by Addy AI</title>
     <link rel="stylesheet" href="css/style.css">
-</head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuidv4.min.js"></script>
+</head> 
 
 <body>
     <div class="chatbot-container">
@@ -15,41 +16,11 @@
         
         <div class="chat-container">
             <div id="chat-history">
-                <div class="bot-message-container">
-                    <div class="bot-profile-photo">
-                        <img src="https://i.imgur.com/xoP7CyF.png" alt="A.I." width="24" height="24"/>
-                    </div>
-                    <div class="bot-message">
-                        <p>Hello 👋</p>
-                    </div>
-                </div>
-                
-                <div class="user-message-container">
-                    <div class="user-profile-photo">
-                        <img src="https://i.imgur.com/WjAIvVp.png" alt="You" width="35" height="35"/>
-                    </div>
-                    <div class="user-message">
-                        <p>Who are you?</p>
-                    </div>
-                </div>
-                
-                <div class="bot-message-container">
-                    <div class="bot-profile-photo">
-                        <img src="https://i.imgur.com/xoP7CyF.png" alt="A.I." width="24" height="24"/>
-                    </div>
-                    <div class="bot-message">
-                        <p>I am a virtual assistant here to help answer your questions</p>
-                    </div>
-                </div>
+                <!-- Initial chat history will be populated dynamically -->
             </div>
             
-            <div class="auto-prompts-container">
-                <div class="auto-prompt">
-                    <p>Auto Prompt 1</p>
-                </div>
-                <div class="auto-prompt">
-                    <p>Auto Prompt 2</p>
-                </div>
+            <div class="auto-prompts-container" id="auto-prompts-container">
+                <!-- Auto prompts will be populated dynamically -->
             </div>
         </div>
         

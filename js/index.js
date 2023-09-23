@@ -1,17 +1,43 @@
 console.log('starting on index.js')
 
-let chatbotName = undefined;
-let chatbotAvatarURL = undefined;
-let customerAvatarURL = "https://i.imgur.com/vphoLPW.png";
-let customerName = "You";
-let chatbotAPI = "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer";
-
 const currentUrl = window.location.href;
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
+const data = JSON.parse(decodeURIComponent(urlParams.get('data')))
 
+let chatId = false // localStorage.getItem('chatId');
+if (!chatId) {
+    data.chatId = uuidv4();
+    localStorage.setItem('chatId', data.chatId);
+}  
+data.primaryColor && document.documentElement.style.setProperty('--user-message-color', data.primaryColor);
+
+console.log(data)
+/*
+SAMPLE DATA
+avatarURL: "https://i.imgur.com/xoP7CyF.png"
+chatId: "92b1dc1f-2bdb-4eec-be75-c9c30a72d1b0"
+chatbotName: "Addy"
+host: ""
+inputPlaceholder : "Ask me anything..."
+name : "TEST Chatbot"
+primaryColor : "#ee00ff"
+primaryColorName : "Purple"
+publicId : "2f05807d-4939-4e6e-be9b-680a3af9a7d2"
+published : false
+quickPrompts : [
+    {id: '1', title: 'help', prompt: 'How can you help?'},
+    {id: '2', title: 'order', prompt: 'Find my order.'}
+]
+welcomeMessage : "Hello! How can I help you today?"
+*/
 const publicId = urlParams.get("publicId") || undefined;
 const showHeader = urlParams.get("header") || undefined;
+let chatbotName = data.chatbotName || undefined;
+let chatbotAvatarURL = data.avatarURL || undefined;
+let customerAvatarURL = "https://i.imgur.com/vphoLPW.png";
+let customerName = "You";
+let chatbotAPI = "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer";
 
 const chatHistory = document.querySelector("#chat-history");
 const sendBtn = document.querySelector("#send-btn");
@@ -38,14 +64,14 @@ function addMessageToChat(message, type) {
     chatHistory.append(messageElem);
 }
 
-function createBotMessageElement(message, botInfo) {
+function createBotMessageElement(message) {
     const messageId = `bot-message-${Date.now()}`;
     const messageElem = document.createElement("div");
 
     messageElem.setAttribute("class", "bot-message-container");
     let innerHTML = chatbotMessageHTML.replace("{{messageId}}", messageId);
-    innerHTML = innerHTML.replace("{{chatbotName}}", botInfo.name);
-    innerHTML = innerHTML.replace("{{chatbotAvatarURL}}", botInfo.avatarURL);
+    innerHTML = innerHTML.replace("{{chatbotName}}", data.name);
+    innerHTML = innerHTML.replace("{{chatbotAvatarURL}}", data.avatarURL);
     innerHTML = innerHTML.replace("{{message}}", message);
     messageElem.innerHTML = innerHTML;
 
@@ -66,34 +92,52 @@ function initializeBot() {
         return;
     }
 
-    fetch(`${chatbotAPI}/bot-info-public?publicId=${publicId}`)
-        .then(response => response.json())
-        .then(data => {
-            const botInfo = data.data;
-            if (!botInfo) {
-                showError(loadingView);
-                return;
-            }
+    // Update chatbot and customer avatar URLs
+    //document.querySelectorAll('.bot-profile-photo img').forEach(img => img.src = data.avatarURL || "https://i.imgur.com/xoP7CyF.png");
+    //document.querySelectorAll('.user-profile-photo img').forEach(img => img.src = customerAvatarURL || "https://i.imgur.com/WjAIvVp.png");
 
-            chatbotName = botInfo.name;
-            chatbotAvatarURL = botInfo.avatarURL;
+    // Update chatbot name in header and title
+    if (header) header.textContent = data.name;
+    document.title = data.name;
 
-            if (loadingView) loadingView.style.display = "none";
-            if (container) container.style.display = "block";
-            updateHeader(botInfo);
-            onSendButtonClick(publicId, botInfo);
-            showBotWelcomeMessage(publicId, botInfo);
-        }).catch((err) => {
-            console.error("Addy AI Error: ", err);
-            showError(loadingView);
-        })
+    // Update input placeholder
+    if (messageInput) messageInput.placeholder = data.inputPlaceholder;
+
+    const autoPromptsContainer = document.querySelector('.auto-prompts-container');
+    if (autoPromptsContainer && data.quickPrompts) {
+        autoPromptsContainer.innerHTML = ''; // Clear existing auto prompts
+        data.quickPrompts.forEach(prompt => {
+            const autoPromptDiv = document.createElement('div');
+            autoPromptDiv.className = 'auto-prompt';
+            autoPromptDiv.innerHTML = `<p>${prompt.prompt}</p>`;
+            autoPromptsContainer.appendChild(autoPromptDiv);
+
+            // Add event listener to each auto-prompt
+            autoPromptDiv.addEventListener('click', function () {
+                messageInput.value = autoPromptDiv.textContent || autoPromptDiv.innerText; // Use textContent or innerText to get only the text, not HTML
+                sendBtn.disabled = false;
+                sendBtn.click(); // Programmatically click the send button
+                sendBtn.disabled = true;
+            });
+        });
+    } 
+
+    chatbotName = data.name;
+    chatbotAvatarURL = data.avatarURL;
+
+    if (loadingView) loadingView.style.display = "none";
+    if (container) container.style.display = "block";
+    updateHeader();
+    onSendButtonClick();
+    showBotWelcomeMessage();
+ 
 }
 
-function updateHeader(botInfo) {
+function updateHeader() {
     if (header) {
-        header.innerHTML = `<p>${botInfo.name}</p>`;
+        header.innerHTML = `<p>${data.name}</p>`;
     }
-    document.title = botInfo.name;
+    document.title = data.name;
 }
 
 function showError(element, text) {
@@ -103,19 +147,20 @@ function showError(element, text) {
     }
 }
 
-function showBotWelcomeMessage(botPublicId, botInfo) {
-    fetch(`${chatbotAPI}/bot-init?publicId=${botPublicId}`)
+function showBotWelcomeMessage() {
+    fetch(`${chatbotAPI}/bot-init?publicId=${data.publicId}&host=${data.host}&chatId=${data.chatId}`)
         .then(response => response.json())
-        .then(data => {
-            if (data.text) {
-                createBotMessageElement(data.text, botInfo);
+        .then(resp => {
+            if (resp.text) {
+                createBotMessageElement(resp.text);
             }
             chatHistory.scrollTop = chatHistory.scrollHeight;
         });
 }
 
-function onSendButtonClick(publicId, botInfo) {
+function onSendButtonClick() {
     sendBtn.addEventListener("click", () => {
+        console.log('clicked')
         const message = messageInput.value;
         if (message) {
             addMessageToChat(message, "customer");
@@ -125,8 +170,8 @@ function onSendButtonClick(publicId, botInfo) {
             thinkingElem.setAttribute("class", "bot-message-container");
             let thinkingInnerHTML = chatbotThinking;
             thinkingInnerHTML = thinkingInnerHTML
-                .replace("{{chatbotAvatarURL}}", botInfo.avatarURL)
-                .replace("{{chatbotName}}", botInfo.name);
+                .replace("{{chatbotAvatarURL}}", data.avatarURL)
+                .replace("{{chatbotName}}", data.name);
 
             setTimeout(() => {
                 thinkingElem.innerHTML = thinkingInnerHTML;
@@ -134,19 +179,19 @@ function onSendButtonClick(publicId, botInfo) {
                 chatHistory.scrollTop = chatHistory.scrollHeight;
             }, 400);
 
-            fetch(`${chatbotAPI}/qa?user_query=${message}&publicId=${publicId}`)
+            fetch(`${chatbotAPI}/qa?user_query=${message}&publicId=${data.publicId}&host=${data.host}&chatId=${data.chatId}`)
                 .then(response => response.json())
                 .then(data => {
                     thinkingElem.style.display = "none";
                     if (data.response) {
-                        createBotMessageElement(data.response, botInfo);
+                        createBotMessageElement(data.response);
                     } else {
-                        createBotMessageElement("Sorry, I could not understand your question", botInfo);
+                        createBotMessageElement("Sorry, I could not understand your question");
                     }
                     chatHistory.scrollTop = chatHistory.scrollHeight;
                 }).catch((error) => {
                     thinkingElem.style.display = "none";
-                    createBotMessageElement("Oops... I had a glitch :( My engineers are working on it", botInfo);
+                    createBotMessageElement("Oops... I had a glitch :( My engineers are working on it");
                 })
         }
     });
@@ -172,7 +217,7 @@ const customerMessageHTML = `
 const chatbotMessageHTML = `
     <div class="bot-message-container">
         <div class="bot-profile-photo">
-            <div style="background-color: #745dde; width: 35px; height: 35px; border-radius: 50%;"></div>
+            <div style="background-color: var(--user-message-color); width: 35px; height: 35px; border-radius: 50%;"></div>
         </div>
         <div class="bot-message">
             <p id="{{messageId}}">{{message}}</p>
@@ -183,7 +228,7 @@ const chatbotMessageHTML = `
 const chatbotThinking = `
     <div class="bot-message-container">
         <div class="bot-profile-photo">
-            <div style="background-color: #745dde; width: 35px; height: 35px; border-radius: 50%;"></div>
+            <div style="background-color: var(--user-message-color); width: 35px; height: 35px; border-radius: 50%;"></div>
         </div>
         <div class="bot-message">
             <p>thinking...</p>
