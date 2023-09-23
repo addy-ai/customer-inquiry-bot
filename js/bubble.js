@@ -21,7 +21,7 @@ window.addEventListener("load", async function () {
         createBubbleComponents(chatbox, data);
 
         chatbotScriptLoaded = true;
-        console.log("Addy AI Chatbot successfully loaded.");
+        // console.log("Addy AI Chatbot successfully loaded.");
     } catch (error) {
         console.error("Error:", error);
     }
@@ -62,7 +62,7 @@ function createChatbox(data) {
 
     /*
     console.table({host:window.location.host, path:window.location.pathname, url, 'scriptTag': scriptTag.id}) 
-    console.log({url}) */
+    // console.log({url}) */
     const chatBox = document.createElement("div");
     chatBox.setAttribute("id", "chatBubbleWindow");
     Object.assign(chatBox.style, {
@@ -176,19 +176,27 @@ function createBubbleComponents(chatbox, data) {
     // Event listeners
     bubble.addEventListener("mouseenter", () => { bubble.style.transform = "scale(1.05)"; });
     bubble.addEventListener("mouseleave", () => { bubble.style.transform = "scale(1)"; });
-    bubble.addEventListener("click", () => {
-        if (isChatbotFirstClick) {
-            isChatbotFirstClick = false;
-            notification.style.display = "none";
+    let toggleView = (e) => { 
+        e.preventDefault();
+        console.log('toggleView')
+        {
+            if (isChatbotFirstClick) {
+                isChatbotFirstClick = false;
+                notification.style.display = "none";
+            }
+            if (chatbox.style.display === "none") {
+                chatbox.style.display = "flex";
+                chatIcon.style.display = "none";
+                closeIcon.style.display = "block";
+            } else {
+                chatbox.style.display = "none";
+                closeIcon.style.display = "none";
+                chatIcon.style.display = "block";
+            }
         }
-        if (chatbox.style.display === "none") {
-            chatbox.style.display = "flex";
-            chatIcon.style.display = "none";
-            closeIcon.style.display = "block";
-        } else {
-            chatbox.style.display = "none";
-            closeIcon.style.display = "none";
-            chatIcon.style.display = "block";
-        }
-    });
+    }
+    
+    bubble.addEventListener('touchend', toggleView);
+    bubble.addEventListener('click', toggleView);
+    
 }
