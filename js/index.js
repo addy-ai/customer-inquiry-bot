@@ -20,7 +20,6 @@ data.primaryColor ||= "#745DDE";
 data.primaryColorName ||= "Purple";
 
 data.chatId = uuidv4();
-localStorage.setItem('chatId', data.chatId);
 
 data.primaryColor && document.documentElement.style.setProperty('--user-message-color', data.primaryColor);
 
