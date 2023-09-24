@@ -75,7 +75,8 @@ function createChatbox(data) {
         left: "none",
         display: "none",
         boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
-        overflow: "hidden", 
+        overflow: "hidden",
+        height: window.innerHeight < 600 ? "70vh": "600px",
         borderRadius: '20px',
     });
     chatBox.innerHTML = `<iframe src="${url}" style="width: 100%; height: 100%;"></iframe>`;
