@@ -3,7 +3,11 @@ name: Auto merge main to live after a PR is closed
 on:
   push:
     branches:
-      - master
+      - main
+  pull_request:
+    types: [closed]
+    branches:
+      - main
 
 jobs:
   update-cms-master:
