@@ -2,6 +2,8 @@ const scriptTag = document.currentScript;
 window.chatbotScriptLoaded = false;
 window.isChatbotFirstClick = true;
 
+
+
 // 0. Init the steps
 window.addEventListener("load", async function () {
     try {
@@ -82,6 +84,7 @@ function createChatbox(data) {
     function handleSmallScreens() {
         window.innerHeight < 600 && (chatBox.style.height = "70vh");
     }
+
     window.addEventListener("resize", handleSmallScreens);
     handleSmallScreens();
 
@@ -89,13 +92,13 @@ function createChatbox(data) {
 
     function handleScreenSizeChange(event) {
         if (event.matches) {
-            chatBox.style.height = "600px";
+            chatBox.style.height = window.innerHeight < 600 ? "70vh": "600px";
             chatBox.style.width = "480px";
         }
     }
     screenSizeQuery.addEventListener("change", handleScreenSizeChange);
     handleScreenSizeChange(screenSizeQuery);
-    return chatBox
+    return chatBox;
 }
 function createNotification() {
     const notification = document.createElement("div");
