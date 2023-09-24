@@ -1,0 +1,29 @@
+name: Auto merge to live branch on push and closed pull requests made on main branch
+
+# Controls when the action will run. 
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  merge-to-live:
+    runs-on: ubuntu-latest
+
+    steps:
+    # This step is necessary to prevent the workflow run from failing when the PR that was merged is deleted.
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Merge to live
+      run: |
+        git fetch origin
+        if [[ "${{ github.event.pull_request.merged == 'true' }}" || "${{ github.event_name == 'push' }}" ]]; then
+          git checkout live
+          git merge --ff-only main  
+          git push origin live
+        fi
