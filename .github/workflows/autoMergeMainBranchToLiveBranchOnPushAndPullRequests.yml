@@ -24,6 +24,6 @@ jobs:
         git fetch origin
         if [[ "${{ github.event.pull_request.merged == 'true' }}" || "${{ github.event_name == 'push' }}" ]]; then
           git checkout live
-          git merge --ff-only main  
+          git merge --allow-unrelated-histories main
           git push origin live
         fi
