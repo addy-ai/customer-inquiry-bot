@@ -1,4 +1,4 @@
-console.log('starting on index.js')
+// console.log('starting on index.js')
 
 // Get Config from Iframe container's URL
 const currentUrl = window.location.href;
@@ -14,16 +14,7 @@ data.welcomeMessage ||= "Hello! How can I help you today?";
 data.inputPlaceholder ||= "Ask me anything...";
 data.quickPrompts = (data && Array.isArray(data.quickPrompts) && data.quickPrompts.length > 0)
     ? data.quickPrompts
-    : [
-        {id: '1', title: 'help', prompt: 'How can you help?'},
-        {id: '2', title: 'order', prompt: 'Find my order.'},
-        {id: '3', title: 'help', prompt: 'How can you help?'},
-        {id: '4', title: 'order', prompt: 'Find my order.'},
-        {id: '5', title: 'help', prompt: 'How can you help?'},
-        {id: '6', title: 'order', prompt: 'Find my order.'},
-        {id: '7', title: 'help', prompt: 'How can you help?'},
-        {id: '8', title: 'order', prompt: 'Find my order.'},
-    ];
+    : [ ];
 
 data.primaryColor ||= "#745DDE";
 data.primaryColorName ||= "Purple";
@@ -33,7 +24,7 @@ localStorage.setItem('chatId', data.chatId);
 
 data.primaryColor && document.documentElement.style.setProperty('--user-message-color', data.primaryColor);
 
-console.log(data)
+// console.log(data)
 /*
 SAMPLE DATA
 avatarURL: "https://i.imgur.com/xoP7CyF.png"
@@ -95,7 +86,7 @@ function createBotMessageElement(message) {
 }
 
 function initializeBot() {
-    console.log('loading bot')
+    // console.log('loading bot')
     const loadingView = document.querySelector(".loading-view"); 
     if (loadingView) loadingView.style.display = "flex";
 
@@ -123,10 +114,13 @@ function initializeBot() {
             autoPromptsContainer.appendChild(autoPromptDiv);
 
             // Add event listener to each auto-prompt
-            autoPromptDiv.addEventListener('click', function () {
+            let autoFillPrompt = (e) => {
+                e.preventDefault();
                 messageInput.value = autoPromptDiv.textContent || autoPromptDiv.innerText; // Use textContent or innerText to get only the text, not HTML
                 submitText()
-            });
+            }
+            autoPromptDiv.addEventListener('click', autoFillPrompt);
+            autoPromptDiv.addEventListener('touchend', autoFillPrompt);
         });
     } 
     document.getElementById('message-input').addEventListener('keydown', function(e) {
@@ -160,8 +154,9 @@ function showBotWelcomeMessage() {
 }
 
 function onSendButtonClick() {
-    sendBtn.addEventListener("click", () => {
-        console.log('clicked')
+    let btnClicked = (e) => {
+        e.preventDefault();
+        // console.log('clicked')
         const message = messageInput.value;
         if (message) {
             addMessageToChat(message, "customer");
@@ -195,7 +190,9 @@ function onSendButtonClick() {
                     createBotMessageElement("Oops... I had a glitch :( My engineers are working on it");
                 })
         }
-    });
+    }
+    sendBtn.addEventListener("touchend", btnClicked );
+    sendBtn.addEventListener('click', btnClicked);
 }
 
 messageInput.addEventListener('input', () => {
