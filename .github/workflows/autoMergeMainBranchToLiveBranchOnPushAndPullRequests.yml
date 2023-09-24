@@ -17,9 +17,9 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
       - name: merge
-        uses: mtanzi/action-automerge@v1
-        id: merge
+        uses: richard-scott/action-automerger@v1.0.3
         with:
-          github_token: ${{ github.token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           source: 'main'
           target: 'live'
+          message: "Merge to live from main"
