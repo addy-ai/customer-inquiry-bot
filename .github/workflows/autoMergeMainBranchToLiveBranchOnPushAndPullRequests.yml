@@ -17,7 +17,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
       - name: merge
-        uses: richard-scott/automerger-action@v1.0.3
+        uses: richard-scott/automerger-action
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           source: 'main'
