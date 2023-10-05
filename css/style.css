@@ -105,6 +105,7 @@ body {
     font-size: 14px;
     line-height: 20px;
     box-sizing: border-box;
+    flex: 1 1 auto;
 }
 
 .bot-message {
@@ -125,6 +126,10 @@ body {
     padding: 4px 5px;
     margin: 0px 8px 9px 12px;
     box-sizing: border-box;
+}
+
+.flex-1 {
+    flex: 1;
 }
 #message-input{
     background: none;
@@ -168,21 +173,21 @@ body {
 }
 .bot-profile-photo,
 .user-profile-photo {
-    width: 45px;
-    height: 45px; 
+    width: 45px !important;
+    height: 45px !important; 
     overflow: hidden;   
     border-radius: 50%; 
 } 
 .bot-profile-photo > img{
     background-color: var(--user-message-color); 
-    width: 35px; 
-    height: 35px; 
+    width: 35px !important; 
+    height: 35px !important;
     padding-top: 5px;
     padding-left: 5px; 
 }
 .user-profile-photo > img {
-    width: 45px; 
-    height: 45px; 
+    width: 45px !important; 
+    height: 45px !important; 
 }
 
 /* Loading Overlay */
