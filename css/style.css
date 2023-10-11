@@ -185,8 +185,8 @@ body {
     margin-right: 5px;
 }
 .clarivo-link {
-    margin-bottom: 2px;
     cursor: pointer;
+    border-bottom: 0.5px solid transparent;
 }
 .clarivo-link:hover {
     border-bottom: 0.5px solid rgba(0, 0, 0, 1);
