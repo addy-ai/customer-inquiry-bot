@@ -20,7 +20,7 @@ body {
 
 /* Header Styles */
 .header {
-    height: 40px;
+    height: 45px;
     background-color: var(--user-message-color);
     display: flex;
     align-items: center;
@@ -73,10 +73,10 @@ body {
 
 .auto-prompt {
     flex-shrink: 0; /* Prevent shrinking of the items */
-    padding: 5px;
+    padding: 9px;
     cursor: pointer;
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.5);
+    border-radius: 20px;
     white-space: nowrap; /* Prevent text wrapping inside .auto-prompt */
 }
 
@@ -99,7 +99,7 @@ body {
     background-color: var(--user-message-color);
     padding: 10px;
     margin-left:8px;  
-    border-radius: 0px 10px 10px 10px;
+    border-radius: 10px 10px 10px 10px;
     min-width: 80px;
     max-width: 80%;
     font-size: 14px;
@@ -177,13 +177,23 @@ body {
     align-items: center;
 }
 .watermark-text {
-    color: rgba(0, 0, 0, 0.5);
+    /* color: rgba(0, 0, 0, 0.5); */
+    color: #9497A3;
     font-size: 12px;
     margin: 0px;
     margin-top: 5px;
     margin-bottom: 7px;
     margin-right: 5px;
+    text-decoration: none;
+    display: flex;
+    flex-direction: row;
+    width: fit-content;
 }
+
+.watermark-text:hover {
+    color: rgba(0, 0, 0, 0.8);
+}
+
 .clarivo-link {
     cursor: pointer;
     border-bottom: 0.5px solid transparent;
@@ -236,6 +246,37 @@ body {
     width: 30px;
     height: 30px;
     animation: spin 1s ease-in-out infinite;
+}
+.clarivo-logo {
+    margin-right: 2px;
+    margin-top: 1px;
+}
+
+.image-switch img.hidden {
+    display: none;
+}
+
+.image-switch:hover img.visible {
+    display: none;
+}
+
+.image-switch:hover img.hidden {
+    display: block;
+}
+
+.footer-link {
+    margin: 0px;
+    padding: 0px;
+    display: flex;
+    flex-direction: row;
+    color: transparent;
+}
+
+.footer-context {
+    width: 0px;
+    height: 0px;
+    font-size: 0px;
+    color: transparent;
 }
 
 @keyframes spin {
