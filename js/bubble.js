@@ -94,7 +94,7 @@ function createChatbox(data) {
     function handleScreenSizeChange(event) {
         if (event.matches) {
             chatBox.style.height = window.innerHeight < 600 ? "70vh": "600px";
-            chatBox.style.width = "480px";
+            chatBox.style.width = "500px";
         }
     }
     screenSizeQuery.addEventListener("change", handleScreenSizeChange);
