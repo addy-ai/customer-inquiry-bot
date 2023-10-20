@@ -188,17 +188,19 @@ body {
     display: flex;
     flex-direction: row;
     width: fit-content;
+    transition: 0.3s all ease;
 }
 
 .watermark-text:hover {
     color: rgba(0, 0, 0, 0.8);
+    transition: 0.3s all ease;
 }
 
-.clarivo-link {
+.addy-link {
     cursor: pointer;
     border-bottom: 0.5px solid transparent;
 }
-.clarivo-link:hover {
+.addy-link:hover {
     border-bottom: 0.5px solid rgba(0, 0, 0, 1);
 }
 
@@ -247,7 +249,7 @@ body {
     height: 30px;
     animation: spin 1s ease-in-out infinite;
 }
-.clarivo-logo {
+.addy-logo {
     margin-right: 2px;
     margin-top: 1px;
 }
