@@ -1,33 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>Addy AI Iframe</title>
-<style>
-    body, html {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        overflow: hidden;
-    }
-    iframe {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        border: none;
-    }
-</style>
+    <meta charset="UTF-8">
+    <title>Addy AI Iframe</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            /* background-image: url("https://i.imgur.com/46b8c6c.png"); */
+        }
+
+        iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .background-image-homepage {
+            background-image: url("https://i.imgur.com/46b8c6c.png");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: cover;
+            height: 100%;
+        }
+    </style>
 </head>
+
 <body>
     <!-- <iframe src="https://addy-ai.com" title="Addy AI"></iframe> -->
-    <iframe style="z-index:-100" src="https://addy-ai.com" title="Addy AI"></iframe>
+    <!-- <iframe style="z-index:-100" src="https://addy-ai.com" title="Addy AI"></iframe> -->
+    <div class="background-image-homepage">
+
+    </div>
     <!-- Including the widget script outside the iframe -->
-    <script src="https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/js/bubble.min.js" id="e715446c-f801-4900-82a6-3fedce1b2be7" title="embed"></script>
+    <script src="https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/js/bubble.min.js"
+        id="4c0aa5a8-8d51-4573-8230-eec6a91fb15c" title="embed"></script>
     <!-- <script src="file:///C:/Users/charl/OneDrive/Documents/GitHub/addy/customer-inquiry-bot/js/bubble.js" id="ac7045a7-5f70-4da6-bed0-30ff4e1af739" title="embed"></script> -->
-<!-- 
+    <!-- 
         <script src="https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/js/bubble.min.js" id=“ac7045a7-5f70-4da6-bed0-30ff4e1af739" title=“embed”></script>
         -->
 </body>
+
 </html>
