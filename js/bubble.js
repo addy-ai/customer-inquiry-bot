@@ -77,6 +77,7 @@ function createChatbox(data) {
         boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
         overflow: "hidden",
         height: window.innerHeight < 600 ? "70vh": "600px",
+        width: window.innerWidth < 500 ? "90vw" : "500px",
         borderRadius: '20px',
     });
     chatBox.innerHTML = `<iframe src="${url}" style="width: 100%; height: 100%;"></iframe>`;
@@ -94,7 +95,7 @@ function createChatbox(data) {
     function handleScreenSizeChange(event) {
         if (event.matches) {
             chatBox.style.height = window.innerHeight < 600 ? "70vh": "600px";
-            chatBox.style.width = "500px";
+            chatBox.style.width = window.innerWidth < 500 ? "90vw" : "500px";
         }
     }
     screenSizeQuery.addEventListener("change", handleScreenSizeChange);

@@ -109,13 +109,13 @@ function initializeBot() {
         data.quickPrompts.forEach(prompt => {
             const autoPromptDiv = document.createElement('div');
             autoPromptDiv.className = 'auto-prompt';
-            autoPromptDiv.innerHTML = `<p>${prompt.prompt}</p>`;
+            autoPromptDiv.innerHTML = `<p>${prompt.title}</p>`;
             autoPromptsContainer.appendChild(autoPromptDiv);
 
             // Add event listener to each auto-prompt
             let autoFillPrompt = (e) => {
                 e.preventDefault();
-                messageInput.value = autoPromptDiv.textContent || autoPromptDiv.innerText; // Use textContent or innerText to get only the text, not HTML
+                messageInput.value = prompt.prompt || autoPromptDiv.innerText; // Use textContent or innerText to get only the text, not HTML
                 submitText()
             }
             autoPromptDiv.addEventListener('click', autoFillPrompt);
@@ -178,6 +178,7 @@ function onSendButtonClick() {
                 .then(response => response.json())
                 .then(data => {
                     thinkingElem.style.display = "none";
+                    console.log(data);
                     if (data.response) {
                         createBotMessageElement(data.response);
                     } else {
