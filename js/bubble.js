@@ -80,6 +80,7 @@ function createChatbox(data) {
         width: window.innerWidth < 500 ? "90vw" : "500px",
         borderRadius: '20px',
     });
+
     chatBox.innerHTML = `<iframe src="${url}" style="width: 100%; height: 100%;"></iframe>`;
     document.body.append(chatBox);
 
@@ -168,6 +169,13 @@ function createBubble(data) {
     return bubble
 }
 
+function updateWidgetDimensions(widget, data) {
+    if (!widget) return;
+   
+    widget.style.width = (window.innerWidth < 500) ? "90vw" : "500px",
+    widget.style.height = (window.innerHeight < 600) ? "70vh": "600px";
+}
+
 // 3. Create the Bubble Components which are shown on-start
 function createBubbleComponents(chatbox, data) {
     // console.log({ chatbox })
@@ -183,7 +191,8 @@ function createBubbleComponents(chatbox, data) {
     bubble.addEventListener("mouseleave", () => { bubble.style.transform = "scale(1)"; });
     let toggleView = (e) => { 
         e.preventDefault();
-        console.log('toggleView')
+        updateWidgetDimensions(chatbox, data);
+        // chatbox.style.width = "90vw";
         {
             if (isChatbotFirstClick) {
                 isChatbotFirstClick = false;
