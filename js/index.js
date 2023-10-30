@@ -89,7 +89,7 @@ function initializeBot() {
     const loadingView = document.querySelector(".loading-view"); 
     if (loadingView) loadingView.style.display = "flex";
 
-    if (!data.publicId) {
+    if (!data.publicId && !data.host) {
         showError(loadingView, "Error: Invalid Bot");
         return;
     } 

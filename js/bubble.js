@@ -77,7 +77,7 @@ function createChatbox(data) {
         boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
         overflow: "hidden",
         height: window.innerHeight < 600 ? "70vh": "600px",
-        width: window.innerWidth < 500 ? "90vw" : "500px",
+        width: window.innerWidth < 1000 ? "90vw" : "500px",
         borderRadius: '20px',
     });
 
@@ -96,7 +96,7 @@ function createChatbox(data) {
     function handleScreenSizeChange(event) {
         if (event.matches) {
             chatBox.style.height = window.innerHeight < 600 ? "70vh": "600px";
-            chatBox.style.width = window.innerWidth < 500 ? "90vw" : "500px";
+            chatBox.style.width = window.innerWidth < 1000 ? "90vw" : "500px";
         }
     }
     screenSizeQuery.addEventListener("change", handleScreenSizeChange);
@@ -172,7 +172,7 @@ function createBubble(data) {
 function updateWidgetDimensions(widget, data) {
     if (!widget) return;
    
-    widget.style.width = (window.innerWidth < 500) ? "90vw" : "500px",
+    widget.style.width = (window.innerWidth < 1000) ? "90vw" : "500px",
     widget.style.height = (window.innerHeight < 600) ? "70vh": "600px";
 }
 
