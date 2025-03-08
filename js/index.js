@@ -7,14 +7,19 @@ const urlParams = new URLSearchParams(queryString);
 const data = JSON.parse(decodeURIComponent(urlParams.get('data')))
 
 // Defaults
+console.log(queryString);
+console.log(data)
 data.avatarURL ||= "https://i.imgur.com/9VBT3XI.png";
 data.name ||= "My Chatbot"
 data.chatbotName ||= "Addy";
 data.welcomeMessage ||= "Hello! How can I help you today?";
 data.inputPlaceholder ||= "Ask me anything...";
-data.quickPrompts = (data && Array.isArray(data.quickPrompts) && data.quickPrompts.length > 0)
-    ? data.quickPrompts
-    : [ ];
+data.quickPrompts =
+  data &&
+  Array.isArray(data.suggestedQuestions) &&
+  data.suggestedQuestions.length > 0
+    ? data.suggestedQuestions
+    : [];
 
 data.primaryColor ||= "#745DDE";
 data.primaryColorName ||= "Purple";
@@ -193,7 +198,6 @@ async function onSendButtonClick() {
                 publicId: data.publicId,
                 selectedText: "",
                 isOldSendMessage: false,
-                isClient: true,
             };
 
             const requestOptions = {
