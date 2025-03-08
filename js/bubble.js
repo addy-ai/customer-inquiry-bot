@@ -31,9 +31,13 @@ window.addEventListener("load", async function () {
 
 // 1. Retrieve Business Information passing scriptTag.id, location.host, and a retrieved or created uuid to Backend.
 async function getChatBotData() {
+    let env = scriptTag?.getAttribute("env") || "development";
     let backend = url = window.location.host === ''
         ? "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer/bot-info-public"
         : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer/bot-info-public"
+    if (env == "development") {
+        backend = "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer/bot-info-public";
+    }
 
     const publicId = scriptTag.id;
     const host = window.location.host;
