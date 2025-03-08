@@ -41,14 +41,15 @@ quickPrompts : [
     {id: '2', title: 'order', prompt: 'Find my order.'}
 ]
 welcomeMessage : "Hello! How can I help you today?"
-*/ 
+*/
 let customerAvatarURL = "https://i.imgur.com/WjAIvVp.png";
 let customerName = "You";
 let chatbotAPI = data.env == "development" ? "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer" : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer";
-
+let backendAPI = data.env == "development" ? "https://backend-dev-111911035666.us-central1.run.app" : "https://backend-prod-zquodzeuva-uc.a.run.app"
+// let backendAPI = "http://127.0.0.1:5003/addy-ai-dev/us-central1"
 const chatHistory = document.querySelector("#chat-history");
 const sendBtn = document.querySelector("#send-btn");
-const messageInput = document.querySelector("#message-input"); 
+const messageInput = document.querySelector("#message-input");
 const header = document.querySelector(".header");
 const promptContainer = document.querySelector(".auto-prompts-container");
 
@@ -86,17 +87,17 @@ function createBotMessageElement(message) {
 
 function initializeBot() {
     // console.log('loading bot')
-    const loadingView = document.querySelector(".loading-view"); 
+    const loadingView = document.querySelector(".loading-view");
     if (loadingView) loadingView.style.display = "flex";
 
     if (!data.publicId && !data.host) {
         showError(loadingView, "Error: Invalid Bot");
         return;
-    } 
+    }
 
     // Update input placeholder
     if (messageInput) messageInput.placeholder = data.inputPlaceholder;
-    let submitText = () => { 
+    let submitText = () => {
         promptContainer.style.display = 'none';
         sendBtn.disabled = false;
         sendBtn.click(); // Programmatically click the send button
@@ -121,17 +122,17 @@ function initializeBot() {
             autoPromptDiv.addEventListener('click', autoFillPrompt);
             autoPromptDiv.addEventListener('touchend', autoFillPrompt);
         });
-    } 
+    }
     document.getElementById('message-input').addEventListener('keydown', function(e) {
         if (e.key === 'Enter' || e.keyCode === 13) {
             submitText()
-        }}) 
+        }})
 
-    if (loadingView) loadingView.style.display = "none"; 
+    if (loadingView) loadingView.style.display = "none";
     updateHeader();
     onSendButtonClick();
     showBotWelcomeMessage();
- 
+
 }
 
 function updateHeader() {
@@ -152,8 +153,8 @@ function showBotWelcomeMessage() {
     createBotMessageElement(data.welcomeMessage);
 }
 
-function onSendButtonClick() {
-    let btnClicked = (e) => {
+async function onSendButtonClick() {
+    let btnClicked = async (e) => {
         e.preventDefault();
         // console.log('clicked')
         const message = messageInput.value;
@@ -174,21 +175,106 @@ function onSendButtonClick() {
                 chatHistory.scrollTop = chatHistory.scrollHeight;
             }, 400);
 
-            fetch(`${chatbotAPI}/qa?user_query=${message}&publicId=${data.publicId}&host=${data.host}&chatId=${data.chatId}`)
-                .then(response => response.json())
-                .then(data => {
-                    thinkingElem.style.display = "none";
-                    console.log(data);
-                    if (data.response) {
-                        createBotMessageElement(data.response);
-                    } else {
-                        createBotMessageElement("Sorry, I could not understand your question");
+            const payload = {
+                requestParams: {
+                    user_prompt: message
+                },
+                uid: "chatbot-website",
+                email: "chatbot-website",
+                chatId: data.chatId,
+                promptId: "addy-assistant-001",
+                subscription: "unlimited",
+                name: "name",
+                customInstructions: [],
+                isClient: true,
+                appID: "noId",
+                host: "hostName",
+                clientHostname: "clientHostname",
+                publicId: data.publicId,
+                selectedText: "",
+                isOldSendMessage: false,
+                isClient: true,
+            };
+
+            const requestOptions = {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            };
+
+            // const ENDPOINT = GlobalVariables.getCloudRunAPIURL() + Assistant.getEndpoints().qaStream;
+            // fetch(`${chatbotAPI}/qa?user_query=${message}&publicId=${data.publicId}&host=${data.host}&chatId=${data.chatId}`)
+
+            const ENDPOINT = backendAPI + "/api/thread/chat-stream";
+            const response = await fetch(ENDPOINT, requestOptions)
+                .then(async response => {
+                    if (!response.body) throw new Error("No response body");
+                    
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let fullResponse = "";
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        const str = decoder.decode(value, { stream: true });
+                        fullResponse += str;
                     }
-                    chatHistory.scrollTop = chatHistory.scrollHeight;
-                }).catch((error) => {
-                    thinkingElem.style.display = "none";
-                    createBotMessageElement("Oops... I had a glitch :( My engineers are working on it");
+
+                    return fullResponse;
                 })
+                .then(fullResponse => {
+                    thinkingElem.style.display = "none";
+                    
+                    try {
+                    //   const data = JSON.parse(fullResponse);
+                      // Split the concatenated JSON objects and parse them correctly
+                      const responses = fullResponse
+                        .match(/\{.*?\}/g)
+                        .map((json) => JSON.parse(json));
+
+                      // Find the last response where finished is true
+                      const lastFinishedResponse = responses
+                        .reverse()
+                        .find((data) => data.finished === true);
+
+                      if (lastFinishedResponse) {
+                        createBotMessageElement(lastFinishedResponse.response);
+                      } else {
+                        createBotMessageElement(
+                          "Oops. No completed response found."
+                        );
+                      }
+                    } catch (error) {
+                        createBotMessageElement("Oops... I had a glitch :( My engineers are working on it");
+                    }
+
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
+                })
+                .catch(error => {
+                    thinkingElem.style.display = "none";
+                    console.log("error")
+                    console.log(error)
+                    createBotMessageElement("Oops... I had a glitch :( My engineers are working on it");
+                });
+
+
+            // const response = await fetch(ENDPOINT, requestOptions)
+            //     .then(response => response.json())
+            //     .then(data => {
+            //         thinkingElem.style.display = "none";
+            //         console.log(data);
+            //         if (data.response) {
+            //             createBotMessageElement(data.response);
+            //         } else {
+            //             createBotMessageElement("Sorry, I could not understand your question");
+            //         }
+            //         chatHistory.scrollTop = chatHistory.scrollHeight;
+            //     }).catch((error) => {
+            //         thinkingElem.style.display = "none";
+            //         createBotMessageElement("Oops... I had a glitch :( My engineers are working on it");
+            //     })
         }
     }
     sendBtn.addEventListener("touchend", btnClicked );
@@ -213,7 +299,7 @@ const customerMessageHTML = `
 `;
 
 const chatbotMessageHTML = `
-    <div class="bot-message-container"> 
+    <div class="bot-message-container">
         <div class="bot-profile-photo">
             <img src="{{chatbotAvatarURL}}" alt="chatbot"/>
         </div>
@@ -225,7 +311,7 @@ const chatbotMessageHTML = `
 
 const chatbotThinking = `
     <div class="bot-message-container">
-        <div class="bot-profile-photo"> 
+        <div class="bot-profile-photo">
             <img src="{{chatbotAvatarURL}}" alt="chatbot"/>
         </div>
         <div class="bot-message">
