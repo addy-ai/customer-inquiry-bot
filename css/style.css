@@ -1,7 +1,7 @@
 /* Main Chatbot Container */
 :root{
     --user-message-color: #745DDE;
-    --avatar-url: url('https://i.imgur.com/xoP7CyF.png')
+    --avatar-url: url('https://i.imgur.com/9VBT3XI.png')
 }
 body {
     margin: 0px;
@@ -206,7 +206,7 @@ body {
 
 /* Profile Photos */
 .bot-profile-photo{
-    background-color: var(--user-message-color); 
+    /* background-color: var(--user-message-color); */
 }
 .bot-profile-photo,
 .user-profile-photo {
@@ -216,7 +216,7 @@ body {
     border-radius: 50%; 
 } 
 .bot-profile-photo > img{
-    background-color: var(--user-message-color); 
+    /* background-color: var(--user-message-color); */
     width: 35px; 
     height: 35px;
     padding-top: 5px;

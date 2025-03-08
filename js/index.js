@@ -7,7 +7,7 @@ const urlParams = new URLSearchParams(queryString);
 const data = JSON.parse(decodeURIComponent(urlParams.get('data')))
 
 // Defaults
-data.avatarURL ||= "https://i.imgur.com/xoP7CyF.png";
+data.avatarURL ||= "https://i.imgur.com/9VBT3XI.png";
 data.name ||= "My Chatbot"
 data.chatbotName ||= "Addy";
 data.welcomeMessage ||= "Hello! How can I help you today?";
@@ -26,7 +26,7 @@ data.primaryColor && document.documentElement.style.setProperty('--user-message-
 // console.log(data)
 /*
 SAMPLE DATA
-avatarURL: "https://i.imgur.com/xoP7CyF.png"
+avatarURL: "https://i.imgur.com/9VBT3XI.png"
 chatId: "92b1dc1f-2bdb-4eec-be75-c9c30a72d1b0"
 chatbotName: "Addy"
 host: ""
@@ -44,7 +44,7 @@ welcomeMessage : "Hello! How can I help you today?"
 */ 
 let customerAvatarURL = "https://i.imgur.com/WjAIvVp.png";
 let customerName = "You";
-let chatbotAPI = "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer";
+let chatbotAPI = data.env == "development" ? "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer" : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer";
 
 const chatHistory = document.querySelector("#chat-history");
 const sendBtn = document.querySelector("#send-btn");
