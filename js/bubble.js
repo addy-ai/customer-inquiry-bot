@@ -54,7 +54,8 @@ async function getChatBotData() {
     data.primaryColor ||= "#745DDE";
     data.primaryColorName ||= "Purple";
     data.publicId = scriptTag.id;
-    data.host = window.location.host; 
+    data.host = window.location.host;
+    data.env = env;
 
     return data;
 }
