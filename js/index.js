@@ -5,10 +5,11 @@ const currentUrl = window.location.href;
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 const data = JSON.parse(decodeURIComponent(urlParams.get('data')))
+let suggestedPromptClicked = null;
 
 // Defaults
-console.log(queryString);
-console.log(data)
+// console.log(queryString);
+// console.log(data)
 data.avatarURL ||= "https://i.imgur.com/9VBT3XI.png";
 data.name ||= "My Chatbot"
 data.chatbotName ||= "Addy";
@@ -121,7 +122,8 @@ function initializeBot() {
             // Add event listener to each auto-prompt
             let autoFillPrompt = (e) => {
                 e.preventDefault();
-                messageInput.value = prompt.prompt || autoPromptDiv.innerText; // Use textContent or innerText to get only the text, not HTML
+                suggestedPromptClicked = prompt;
+                messageInput.value = prompt.title || autoPromptDiv.innerText; // Use textContent or innerText to get only the text, not HTML
                 submitText()
             }
             autoPromptDiv.addEventListener('click', autoFillPrompt);
@@ -162,7 +164,8 @@ async function onSendButtonClick() {
     let btnClicked = async (e) => {
         e.preventDefault();
         // console.log('clicked')
-        const message = messageInput.value;
+        let message = messageInput.value;
+        
         if (message) {
             addMessageToChat(message, "customer");
             messageInput.value = "";
@@ -180,9 +183,12 @@ async function onSendButtonClick() {
                 chatHistory.scrollTop = chatHistory.scrollHeight;
             }, 400);
 
+            const messageToSendToBackend = suggestedPromptClicked ? suggestedPromptClicked.prompt : message;
+            suggestedPromptClicked = null; // Reset the suggested prompt clicked
+
             const payload = {
                 requestParams: {
-                    user_prompt: message
+                    user_prompt: messageToSendToBackend
                 },
                 uid: "chatbot-website",
                 email: "chatbot-website",
@@ -258,8 +264,7 @@ async function onSendButtonClick() {
                 })
                 .catch(error => {
                     thinkingElem.style.display = "none";
-                    console.log("error")
-                    console.log(error)
+                    console.error(error)
                     createBotMessageElement("Oops... I had a glitch :( My engineers are working on it");
                 });
 
