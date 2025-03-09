@@ -38,6 +38,8 @@ async function getChatBotData() {
     if (env == "development") {
         backend = "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer/bot-info-public";
     }
+    // backend =
+    //   "http://127.0.0.1:5003/addy-ai-dev/us-central1/businessInference/infer/bot-info-public";
 
     const publicId = scriptTag.id;
     const host = window.location.host;
@@ -48,7 +50,9 @@ async function getChatBotData() {
         }
     })
     .then((response) => response.json())
-    .then(data => { return data.data.config;})
+    .then(data => { {
+        return data.data.config;
+    }})
     .catch((error) => { console.error("Error", error); return undefined; });
 
     data.primaryColor ||= "#745DDE";
