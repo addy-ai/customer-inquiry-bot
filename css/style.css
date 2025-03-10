@@ -65,8 +65,8 @@ body {
     gap: 10px;
     flex-wrap: wrap; /* Allow wrapping */
     align-content: flex-start; /* Align content to the start */
-    overflow: auto; /* Hide overflow */
-    overflow-y: scroll;
+    overflow: none; /* Hide overflow */
+    /* overflow-y: scroll; */
     /* max-height: calc(2 * (1em + 10px + 2px)); /* Limit to two lines */
     padding-bottom: 8px; 
 }
