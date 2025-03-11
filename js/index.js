@@ -79,10 +79,13 @@ function createBotMessageElement(message) {
     const messageElem = document.createElement("div");
 
     messageElem.setAttribute("class", "bot-message-container");
+    
+    const formattedMessage = marked.parse(message);
+
     let innerHTML = chatbotMessageHTML.replace("{{messageId}}", messageId);
     innerHTML = innerHTML.replace("{{chatbotName}}", data.chatbotName);
     innerHTML = innerHTML.replace("{{chatbotAvatarURL}}", data.avatarURL);
-    innerHTML = innerHTML.replace("{{message}}", message);
+    innerHTML = innerHTML.replace("{{message}}", formattedMessage);
     messageElem.innerHTML = innerHTML;
 
     chatHistory.append(messageElem);
@@ -187,23 +190,23 @@ async function onSendButtonClick() {
             suggestedPromptClicked = null; // Reset the suggested prompt clicked
 
             const payload = {
-                requestParams: {
-                    user_prompt: messageToSendToBackend
-                },
-                uid: "chatbot-website",
-                email: "chatbot-website",
-                chatId: data.chatId,
-                promptId: "addy-assistant-001",
-                subscription: "unlimited",
-                name: "name",
-                customInstructions: [],
-                isClient: true,
-                appID: "noId",
-                host: "hostName",
-                clientHostname: "clientHostname",
-                publicId: data.publicId,
-                selectedText: "",
-                isOldSendMessage: false,
+              requestParams: {
+                user_prompt: messageToSendToBackend,
+              },
+              uid: "chatbot-website",
+              email: "chatbot-website",
+              chatId: data.chatId,
+              promptId: "addy-assistant-001-website",
+              subscription: "unlimited",
+              name: "name",
+              customInstructions: [],
+              isClient: true,
+              appID: "noId",
+              host: "hostName",
+              clientHostname: "clientHostname",
+              publicId: data.publicId,
+              selectedText: "",
+              isOldSendMessage: false,
             };
 
             const requestOptions = {
@@ -238,11 +241,28 @@ async function onSendButtonClick() {
                     thinkingElem.style.display = "none";
                     
                     try {
-                    //   const data = JSON.parse(fullResponse);
-                      // Split the concatenated JSON objects and parse them correctly
-                      const responses = fullResponse
-                        .match(/\{.*?\}/g)
-                        .map((json) => JSON.parse(json));
+                      // Safely split JSON objects using newlines or another reliable delimiter
+                      const jsonStrings = fullResponse
+                        .trim()
+                        .split("}{")
+                        .map((str, index, arr) => {
+                          // Add missing brackets back
+                          if (index === 0) return str + "}";
+                          if (index === arr.length - 1) return "{" + str;
+                          return "{" + str + "}";
+                        });
+
+                      // Parse each JSON object safely
+                      const responses = jsonStrings
+                        .map((json) => {
+                          try {
+                            return JSON.parse(json);
+                          } catch (e) {
+                            console.error("JSON parse error:", e, json);
+                            return null;
+                          }
+                        })
+                        .filter(Boolean); // Remove null values
 
                       // Find the last response where finished is true
                       const lastFinishedResponse = responses
