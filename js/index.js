@@ -4,14 +4,14 @@
 const currentUrl = window.location.href;
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
-const data = JSON.parse(decodeURIComponent(urlParams.get('data')))
+const data = JSON.parse(decodeURIComponent(urlParams.get("data")));
 let suggestedPromptClicked = null;
 
 // Defaults
 // console.log(queryString);
 // console.log(data)
 data.avatarURL ||= "https://i.imgur.com/9VBT3XI.png";
-data.name ||= "My Chatbot"
+data.name ||= "My Chatbot";
 data.chatbotName ||= "Addy";
 data.welcomeMessage ||= "Hello! How can I help you today?";
 data.inputPlaceholder ||= "Ask me anything...";
@@ -27,7 +27,11 @@ data.primaryColorName ||= "Purple";
 
 data.chatId = uuidv4();
 
-data.primaryColor && document.documentElement.style.setProperty('--user-message-color', data.primaryColor);
+data.primaryColor &&
+  document.documentElement.style.setProperty(
+    "--user-message-color",
+    data.primaryColor
+  );
 
 // console.log(data)
 /*
@@ -50,9 +54,12 @@ welcomeMessage : "Hello! How can I help you today?"
 */
 let customerAvatarURL = "https://i.imgur.com/WjAIvVp.png";
 let customerName = "You";
-let chatbotAPI = data.env == "development" ? "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer" : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer";
-let backendAPI = data.env == "development" ? "https://backend-dev-111911035666.us-central1.run.app" : "https://backend-prod-zquodzeuva-uc.a.run.app"
-// let backendAPI = "http://127.0.0.1:5003/addy-ai-dev/us-central1"
+let chatbotAPI =
+  data.env == "development"
+    ? "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer"
+    : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer";
+// let backendAPI = data.env == "development" ? "https://backend-dev-111911035666.us-central1.run.app" : "https://backend-prod-zquodzeuva-uc.a.run.app"
+let backendAPI = "http://127.0.0.1:5003/addy-ai-dev/us-central1";
 const chatHistory = document.querySelector("#chat-history");
 const sendBtn = document.querySelector("#send-btn");
 const messageInput = document.querySelector("#message-input");
@@ -62,257 +69,375 @@ const promptContainer = document.querySelector(".auto-prompts-container");
 sendBtn.disabled = true;
 
 window.onload = async function () {
-    initializeBot();
-}
+  initializeBot();
+};
 
 function addMessageToChat(message, type) {
-    const messageElem = document.createElement("div");
-    if (type == "customer") {
-        messageElem.setAttribute("class", "user-message-container");
-        messageElem.innerHTML = customerMessageHTML.replace("{{message}}", message);
-    }
-    chatHistory.append(messageElem);
+  const messageElem = document.createElement("div");
+  if (type == "customer") {
+    messageElem.setAttribute("class", "user-message-container");
+    messageElem.innerHTML = customerMessageHTML.replace("{{message}}", message);
+  }
+  chatHistory.append(messageElem);
 }
 
 function createBotMessageElement(message) {
-    const messageId = `bot-message-${Date.now()}`;
-    const messageElem = document.createElement("div");
+  const messageId = `bot-message-${Date.now()}`;
+  const messageElem = document.createElement("div");
 
-    messageElem.setAttribute("class", "bot-message-container");
-    
-    const formattedMessage = marked.parse(message);
+  messageElem.setAttribute("class", "bot-message-container");
 
-    let innerHTML = chatbotMessageHTML.replace("{{messageId}}", messageId);
-    innerHTML = innerHTML.replace("{{chatbotName}}", data.chatbotName);
-    innerHTML = innerHTML.replace("{{chatbotAvatarURL}}", data.avatarURL);
-    innerHTML = innerHTML.replace("{{message}}", formattedMessage);
-    messageElem.innerHTML = innerHTML;
+  //   const formattedMessage = marked.parse(message);
 
-    chatHistory.append(messageElem);
-    chatHistory.scrollTop = chatHistory.scrollHeight;
+  let innerHTML = chatbotMessageHTML.replace("{{messageId}}", messageId);
+  innerHTML = innerHTML.replace("{{chatbotName}}", data.chatbotName);
+  innerHTML = innerHTML.replace("{{chatbotAvatarURL}}", data.avatarURL);
+  innerHTML = innerHTML.replace("{{message}}", message);
+  messageElem.innerHTML = innerHTML;
 
-    return messageId;
+  chatHistory.append(messageElem);
+  chatHistory.scrollTop = chatHistory.scrollHeight;
+
+  return messageId;
+}
+const renderer = new marked.Renderer();
+renderer.paragraph = function (text) {
+  console.log(text)
+  return text;
+};
+
+function convertMarkdownToHTML(text) {
+  return marked.parse(text);
+}
+
+function appendBotMessageElement(message, messageId) {
+  console.log(message);
+  const messageElem = document.getElementById(messageId);
+
+  if (messageElem) {
+    try {
+      if (typeof message === "object" && message.emailString) {
+        messageElem.innerHTML = marked.parse(message.emailString);
+        return; // Stop further execution since we've replaced the message
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    if (message.includes("documents-fetched")) {
+      return;
+    }
+    const formattedMessage = convertMarkdownToHTML(message);
+
+    if (messageElem.innerHTML === "...") {
+      messageElem.innerHTML = formattedMessage;
+    } else {
+      messageElem.innerHTML = formattedMessage;
+    }
+  }
 }
 
 function initializeBot() {
-    // console.log('loading bot')
-    const loadingView = document.querySelector(".loading-view");
-    if (loadingView) loadingView.style.display = "flex";
+  // console.log('loading bot')
+  const loadingView = document.querySelector(".loading-view");
+  if (loadingView) loadingView.style.display = "flex";
 
-    if (!data.publicId && !data.host) {
-        showError(loadingView, "Error: Invalid Bot");
-        return;
-    }
+  if (!data.publicId && !data.host) {
+    showError(loadingView, "Error: Invalid Bot");
+    return;
+  }
 
-    // Update input placeholder
-    if (messageInput) messageInput.placeholder = data.inputPlaceholder;
-    let submitText = () => {
-        promptContainer.style.display = 'none';
-        sendBtn.disabled = false;
-        sendBtn.click(); // Programmatically click the send button
-        sendBtn.disabled = true;
-    }
+  // Update input placeholder
+  if (messageInput) messageInput.placeholder = data.inputPlaceholder;
+  let submitText = () => {
+    promptContainer.style.display = "none";
+    sendBtn.disabled = false;
+    sendBtn.click(); // Programmatically click the send button
+    sendBtn.disabled = true;
+  };
 
-    const autoPromptsContainer = document.querySelector('.auto-prompts-container');
-    if (autoPromptsContainer && data.quickPrompts) {
-        autoPromptsContainer.innerHTML = '';
-        data.quickPrompts.forEach(prompt => {
-            const autoPromptDiv = document.createElement('div');
-            autoPromptDiv.className = 'auto-prompt';
-            autoPromptDiv.innerHTML = `<p>${prompt.title}</p>`;
-            autoPromptsContainer.appendChild(autoPromptDiv);
+  const autoPromptsContainer = document.querySelector(
+    ".auto-prompts-container"
+  );
+  if (autoPromptsContainer && data.quickPrompts) {
+    autoPromptsContainer.innerHTML = "";
+    data.quickPrompts.forEach((prompt) => {
+      const autoPromptDiv = document.createElement("div");
+      autoPromptDiv.className = "auto-prompt";
+      autoPromptDiv.innerHTML = `<p>${prompt.title}</p>`;
+      autoPromptsContainer.appendChild(autoPromptDiv);
 
-            // Add event listener to each auto-prompt
-            let autoFillPrompt = (e) => {
-                e.preventDefault();
-                suggestedPromptClicked = prompt;
-                messageInput.value = prompt.title || autoPromptDiv.innerText; // Use textContent or innerText to get only the text, not HTML
-                submitText()
-            }
-            autoPromptDiv.addEventListener('click', autoFillPrompt);
-            autoPromptDiv.addEventListener('touchend', autoFillPrompt);
-        });
-    }
-    document.getElementById('message-input').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' || e.keyCode === 13) {
-            submitText()
-        }})
+      // Add event listener to each auto-prompt
+      let autoFillPrompt = (e) => {
+        e.preventDefault();
+        suggestedPromptClicked = prompt;
+        messageInput.value = prompt.title || autoPromptDiv.innerText; // Use textContent or innerText to get only the text, not HTML
+        submitText();
+      };
+      autoPromptDiv.addEventListener("click", autoFillPrompt);
+      autoPromptDiv.addEventListener("touchend", autoFillPrompt);
+    });
+  }
+  document
+    .getElementById("message-input")
+    .addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.keyCode === 13) {
+        submitText();
+      }
+    });
 
-    if (loadingView) loadingView.style.display = "none";
-    updateHeader();
-    onSendButtonClick();
-    showBotWelcomeMessage();
-
+  if (loadingView) loadingView.style.display = "none";
+  updateHeader();
+  onSendButtonClick();
+  showBotWelcomeMessage();
 }
 
 function updateHeader() {
-    if (header) {
-        header.innerHTML = `<p>${data.chatbotName}</p>`;
-    }
-    document.title = data.chatbotName;
+  if (header) {
+    header.innerHTML = `<p>${data.chatbotName}</p>`;
+  }
+  document.title = data.chatbotName;
 }
 
 function showError(element, text) {
-    if (element) {
-        element.innerHTML = `<p>${text ? text : "Error: Chatbot not found"}</p>`;
-        element.style.color = "#D2042D";
-    }
+  if (element) {
+    element.innerHTML = `<p>${text ? text : "Error: Chatbot not found"}</p>`;
+    element.style.color = "#D2042D";
+  }
 }
 
 function showBotWelcomeMessage() {
-    createBotMessageElement(data.welcomeMessage);
+  createBotMessageElement(data.welcomeMessage);
+}
+
+function isJsonString(str) {
+  try {
+    JSON.parse(str);
+  } catch (e) {
+    //   console.error("Error parsing JSON string", str, e);
+    return false;
+  }
+  return true;
+}
+
+function cleanEmailString(emailString) {
+  // emailString = emailString.replace(/\n/g, "");
+  // emailString = emailString.replace(/\\n\\n/g, "\n\n");
+  emailString = emailString.replace(/\\n/g, "\n");
+  emailString = emailString.replace(/\\t/g, "\t");
+  emailString = emailString.replace(/#/g, "");
+  emailString = emailString.trim(); // Remove leading "\n\n" characters
+  return {
+    subject: "",
+    emailString: emailString,
+  };
+}
+
+function getJSONArray(str) {
+  try {
+    const parsedData = JSON.parse(str);
+    // return the actual array
+    return parsedData;
+  } catch (e) {
+    //   console.error("Error parsing JSON array", str, e);
+    return false;
+  }
 }
 
 async function onSendButtonClick() {
-    let btnClicked = async (e) => {
-        e.preventDefault();
-        // console.log('clicked')
-        let message = messageInput.value;
-        
-        if (message) {
-            addMessageToChat(message, "customer");
-            messageInput.value = "";
+  let btnClicked = async (e) => {
+    e.preventDefault();
+    // console.log('clicked')
+    let message = messageInput.value;
 
-            const thinkingElem = document.createElement("div");
-            thinkingElem.setAttribute("class", "bot-message-container");
-            let thinkingInnerHTML = chatbotThinking;
-            thinkingInnerHTML = thinkingInnerHTML
-                .replace("{{chatbotAvatarURL}}", data.avatarURL)
-                .replace("{{chatbotName}}", data.chatbotName);
+    if (message) {
+      addMessageToChat(message, "customer");
+      messageInput.value = "";
 
-            setTimeout(() => {
-                thinkingElem.innerHTML = thinkingInnerHTML;
-                chatHistory.append(thinkingElem);
-                chatHistory.scrollTop = chatHistory.scrollHeight;
-            }, 400);
+      const thinkingElem = document.createElement("div");
+      thinkingElem.setAttribute("class", "bot-message-container");
+      let thinkingInnerHTML = chatbotThinking;
+      thinkingInnerHTML = thinkingInnerHTML
+        .replace("{{chatbotAvatarURL}}", data.avatarURL)
+        .replace("{{chatbotName}}", data.chatbotName);
 
-            const messageToSendToBackend = suggestedPromptClicked ? suggestedPromptClicked.prompt : message;
-            suggestedPromptClicked = null; // Reset the suggested prompt clicked
+      setTimeout(() => {
+        thinkingElem.innerHTML = thinkingInnerHTML;
+        chatHistory.append(thinkingElem);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+      }, 400);
 
-            const payload = {
-              requestParams: {
-                user_prompt: messageToSendToBackend,
-              },
-              uid: "chatbot-website",
-              email: "chatbot-website",
-              chatId: data.chatId,
-              promptId: "addy-assistant-001-website",
-              subscription: "unlimited",
-              name: "name",
-              customInstructions: [],
-              isClient: true,
-              appID: "noId",
-              host: "hostName",
-              clientHostname: "clientHostname",
-              publicId: data.publicId,
-              selectedText: "",
-              isOldSendMessage: false,
-            };
+      const messageToSendToBackend = suggestedPromptClicked
+        ? suggestedPromptClicked.prompt
+        : message;
+      suggestedPromptClicked = null; // Reset the suggested prompt clicked
 
-            const requestOptions = {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            };
+      const payload = {
+        requestParams: {
+          user_prompt: messageToSendToBackend,
+        },
+        uid: "chatbot-website",
+        email: "chatbot-website",
+        chatId: data.chatId,
+        promptId: "addy-assistant-001-website",
+        subscription: "unlimited",
+        name: "name",
+        customInstructions: [],
+        isClient: true,
+        appID: "noId",
+        host: "hostName",
+        clientHostname: "clientHostname",
+        publicId: data.publicId,
+        selectedText: "",
+        isOldSendMessage: false,
+      };
 
-            // const ENDPOINT = GlobalVariables.getCloudRunAPIURL() + Assistant.getEndpoints().qaStream;
-            // fetch(`${chatbotAPI}/qa?user_query=${message}&publicId=${data.publicId}&host=${data.host}&chatId=${data.chatId}`)
+      const requestOptions = {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      };
 
-            const ENDPOINT = backendAPI + "/api/thread/chat-stream";
-            const response = await fetch(ENDPOINT, requestOptions)
-                .then(async response => {
-                    if (!response.body) throw new Error("No response body");
-                    
-                    const reader = response.body.getReader();
+      // const ENDPOINT = GlobalVariables.getCloudRunAPIURL() + Assistant.getEndpoints().qaStream;
+      // fetch(`${chatbotAPI}/qa?user_query=${message}&publicId=${data.publicId}&host=${data.host}&chatId=${data.chatId}`)
+
+      const ENDPOINT = backendAPI + "/api/thread/chat-stream";
+      const response = await fetch(ENDPOINT, requestOptions)
+        .then(async (response) => {
+          if (!response.body) throw new Error("No response body");
+
+          const reader = response.body.getReader();
+          let botMessage = "";
+          let fullMessage = "";
+          const messageId = createBotMessageElement("...");
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunkString = new TextDecoder().decode(value);
+
+            // if (backupDocumentsFetchedChunk.length && this.isJsonString(chunkString)) {
+            //     const backupDocumentsFetched = this.joinAndParseBackupDocumentsFetched(backupDocumentsFetchedChunk);
+            //     if (backupDocumentsFetched) {
+            //         yield backupDocumentsFetched;
+            //     }
+            //     backupDocumentsFetchedChunk = [];
+            // } else if (!this.isJsonString(chunkString) && chunkString.includes("documents-fetched")) {
+            //     backupDocumentsFetchedChunk.push(chunkString);
+            // } else if (backupDocumentsFetchedChunk.length) {
+            //     backupDocumentsFetchedChunk.push(chunkString);
+            // }
+
+            // if (backupDocumentsComparedChunk.length && this.isJsonString(chunkString)) {
+            //     const backupDocumentsCompared = this.joinAndParseBackupDocumentsCompared(backupDocumentsComparedChunk);
+            //     if (backupDocumentsCompared) {
+            //         yield backupDocumentsCompared;
+            //     }
+            // backupDocumentsComparedChunk = [];
+            // } else if (!this.isJsonString(chunkString) && chunkString.includes("documents-compared")) {
+            //     backupDocumentsComparedChunk.push(chunkString);
+            // } else if (backupDocumentsComparedChunk.length) {
+            //     backupDocumentsComparedChunk.push(chunkString);
+            // }
+
+            if (isJsonString(chunkString)) {
+              const parsedData = JSON.parse(chunkString);
+              let messages = null;
+              if (parsedData && parsedData.success) {
+                if (parsedData.response === "documents-fetched") {
+                  messages =
+                    "documents-fetched-" + JSON.stringify(parsedData.documents);
+                } else if (parsedData.response === "documents-compared") {
+                  messages =
+                    "documents-compared-" +
+                    JSON.stringify(parsedData.documents);
+                } else {
+                  if (!parsedData.finished) {
+                    // Get the
                     const decoder = new TextDecoder();
-                    let fullResponse = "";
-
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        
-                        const str = decoder.decode(value, { stream: true });
-                        fullResponse += str;
+                    messages =
+                      typeof parsedData.response === "string"
+                        ? parsedData.response
+                        : decoder
+                            .decode(new Uint8Array(parsedData.response.data))
+                            .split("data:")[1];
+                    messages = messages.replace(/"/g, "").replace(/#/g, "");
+                  } else {
+                    if (parsedData.chatId) {
+                      window.chatId = parsedData.chatId;
                     }
-
-                    return fullResponse;
-                })
-                .then(fullResponse => {
-                    thinkingElem.style.display = "none";
-                    
-                    try {
-                      // Safely split JSON objects using newlines or another reliable delimiter
-                      const jsonStrings = fullResponse
-                        .trim()
-                        .split("}{")
-                        .map((str, index, arr) => {
-                          // Add missing brackets back
-                          if (index === 0) return str + "}";
-                          if (index === arr.length - 1) return "{" + str;
-                          return "{" + str + "}";
-                        });
-
-                      // Parse each JSON object safely
-                      const responses = jsonStrings
-                        .map((json) => {
-                          try {
-                            return JSON.parse(json);
-                          } catch (e) {
-                            console.error("JSON parse error:", e, json);
-                            return null;
-                          }
-                        })
-                        .filter(Boolean); // Remove null values
-
-                      // Find the last response where finished is true
-                      const lastFinishedResponse = responses
-                        .reverse()
-                        .find((data) => data.finished === true);
-
-                      if (lastFinishedResponse) {
-                        createBotMessageElement(lastFinishedResponse.response);
-                      } else {
-                        createBotMessageElement(
-                          "Oops. No completed response found."
-                        );
+                    let finalMessage = parsedData.response.replaceAll(
+                      "event: message",
+                      ""
+                    );
+                    finalMessage = finalMessage.replaceAll("data: ", "");
+                    finalMessage = finalMessage.split('"').join("");
+                    messages = cleanEmailString(finalMessage);
+                  }
+                }
+              }
+              thinkingElem.style.display = "none";
+              fullMessage += messages;
+              appendBotMessageElement(fullMessage || "", messageId);
+            } else {
+              let chunkStringformat = chunkString.replace(/}\s*{/g, "},{");
+              chunkStringformat = "[" + chunkStringformat + "]";
+              const jsonArray = getJSONArray(chunkStringformat);
+              if (jsonArray && jsonArray.length > 0) {
+                for (let i = 0; i < jsonArray.length; i++) {
+                  const item = jsonArray[i];
+                  let messages = null;
+                  if (item && item.success) {
+                    // Get the
+                    if (!item.finished) {
+                      const decoder = new TextDecoder();
+                      messages =
+                        typeof item.response === "string"
+                          ? item.response
+                          : decoder
+                              .decode(new Uint8Array(item.response.data))
+                              .split("data:")[1];
+                      messages = messages.replace(/"/g, "").replace(/#/g, "");
+                    } else {
+                      if (item.chatId) {
+                        window.chatId = item.chatId;
                       }
-                    } catch (error) {
-                        createBotMessageElement("Oops... I had a glitch :( My engineers are working on it");
+                      let finalMessage = item.response.replaceAll(
+                        "event: message",
+                        ""
+                      );
+                      finalMessage = finalMessage.replaceAll("data: ", "");
+                      finalMessage = finalMessage.split('"').join("");
+                      messages = this.cleanEmailString(finalMessage);
                     }
+                  }
+                  thinkingElem.style.display = "none";
+                  fullMessage += messages;
+                  appendBotMessageElement(fullMessage || "", messageId);
+                }
+              }
+            }
 
-                    chatHistory.scrollTop = chatHistory.scrollHeight;
-                })
-                .catch(error => {
-                    thinkingElem.style.display = "none";
-                    console.error(error)
-                    createBotMessageElement("Oops... I had a glitch :( My engineers are working on it");
-                });
+            // Update message content dynamically
+          }
 
-
-            // const response = await fetch(ENDPOINT, requestOptions)
-            //     .then(response => response.json())
-            //     .then(data => {
-            //         thinkingElem.style.display = "none";
-            //         console.log(data);
-            //         if (data.response) {
-            //             createBotMessageElement(data.response);
-            //         } else {
-            //             createBotMessageElement("Sorry, I could not understand your question");
-            //         }
-            //         chatHistory.scrollTop = chatHistory.scrollHeight;
-            //     }).catch((error) => {
-            //         thinkingElem.style.display = "none";
-            //         createBotMessageElement("Oops... I had a glitch :( My engineers are working on it");
-            //     })
-        }
+          return "";
+        })
+        .catch((error) => {
+          thinkingElem.style.display = "none";
+          console.error(error);
+          createBotMessageElement(
+            "Oops... I had a glitch :( My engineers are working on it"
+          );
+        });
     }
-    sendBtn.addEventListener("touchend", btnClicked );
-    sendBtn.addEventListener('click', btnClicked);
+  };
+  sendBtn.addEventListener("touchend", btnClicked);
+  sendBtn.addEventListener("click", btnClicked);
 }
 
-messageInput.addEventListener('input', () => {
-    const trimmedValue = messageInput.value.trim();
-    sendBtn.disabled = trimmedValue.length <= 1;
+messageInput.addEventListener("input", () => {
+  const trimmedValue = messageInput.value.trim();
+  sendBtn.disabled = trimmedValue.length <= 1;
 });
 
 // Update the class names and structure to match the new CSS
