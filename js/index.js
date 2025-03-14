@@ -58,8 +58,13 @@ let chatbotAPI =
   data.env == "development"
     ? "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer"
     : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer";
-// let backendAPI = data.env == "development" ? "https://backend-dev-111911035666.us-central1.run.app" : "https://backend-prod-zquodzeuva-uc.a.run.app"
-let backendAPI = "http://127.0.0.1:5003/addy-ai-dev/us-central1";
+let backendAPI = 
+  data.env == "local"
+    ? "http://127.0.0.1:5003/addy-ai-dev/us-central1"
+    : data.env == "development" 
+      ? "https://backend-dev-111911035666.us-central1.run.app" 
+      : "https://backend-prod-zquodzeuva-uc.a.run.app"
+// let backendAPI = "http://127.0.0.1:5003/addy-ai-dev/us-central1";
 const chatHistory = document.querySelector("#chat-history");
 const sendBtn = document.querySelector("#send-btn");
 const messageInput = document.querySelector("#message-input");
@@ -111,9 +116,9 @@ function convertMarkdownToHTML(text) {
 }
 
 function appendBotMessageElement(message, messageId) {
-  console.log(message);
   const messageElem = document.getElementById(messageId);
 
+  // Convert objects to JSON string for better debugging
   if (messageElem) {
     try {
       if (typeof message === "object" && message.emailString) {
@@ -344,12 +349,12 @@ async function onSendButtonClick() {
               let messages = null;
               if (parsedData && parsedData.success) {
                 if (parsedData.response === "documents-fetched") {
-                  messages =
-                    "documents-fetched-" + JSON.stringify(parsedData.documents);
+                  // messages =
+                  //   "documents-fetched-" + JSON.stringify(parsedData.documents);
                 } else if (parsedData.response === "documents-compared") {
-                  messages =
-                    "documents-compared-" +
-                    JSON.stringify(parsedData.documents);
+                  // messages =
+                  //   "documents-compared-" +
+                  //   JSON.stringify(parsedData.documents);
                 } else {
                   if (!parsedData.finished) {
                     // Get the
@@ -376,7 +381,12 @@ async function onSendButtonClick() {
                 }
               }
               thinkingElem.style.display = "none";
-              fullMessage += messages;
+              if (typeof messages === "object" && messages.emailString) {
+                fullMessage = messages;
+              } else {
+                fullMessage += messages;
+              }
+
               appendBotMessageElement(fullMessage || "", messageId);
             } else {
               let chunkStringformat = chunkString.replace(/}\s*{/g, "},{");
@@ -410,6 +420,7 @@ async function onSendButtonClick() {
                       messages = this.cleanEmailString(finalMessage);
                     }
                   }
+              console.log("messages2 - " + messages);
                   thinkingElem.style.display = "none";
                   fullMessage += messages;
                   appendBotMessageElement(fullMessage || "", messageId);
