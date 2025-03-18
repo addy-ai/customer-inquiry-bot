@@ -25,7 +25,7 @@ data.quickPrompts =
 data.primaryColor ||= "#745DDE";
 data.primaryColorName ||= "Purple";
 
-data.chatId = "website-chatbot" + uuidv4();
+data.chatId = "website-chatbot-" + uuidv4();
 
 data.primaryColor &&
   document.documentElement.style.setProperty(
@@ -64,7 +64,7 @@ let backendAPI =
     : data.env == "development"
     ? "https://backend-dev-111911035666.us-central1.run.app"
     : "https://backend-prod-zquodzeuva-uc.a.run.app";
-// let backendAPI = "http://127.0.0.1:5003/addy-ai-dev/us-central1";
+backendAPI = "http://127.0.0.1:5003/addy-ai-dev/us-central1";
 const chatHistory = document.querySelector("#chat-history");
 const sendBtn = document.querySelector("#send-btn");
 const messageInput = document.querySelector("#message-input");
@@ -75,10 +75,6 @@ sendBtn.disabled = true;
 
 window.onload = async function () {
   initializeBot();
-  // Example usage: Send data to your backend
-  getUserData().then((data) => {
-    console.log("User Data:", data);
-  });
 };
 
 async function getUserData() {
@@ -134,7 +130,6 @@ function createBotMessageElement(message) {
 }
 const renderer = new marked.Renderer();
 renderer.paragraph = function (text) {
-  console.log(text);
   return text;
 };
 
@@ -285,11 +280,9 @@ async function onSendButtonClick() {
       addMessageToChat(message, "customer");
       messageInput.value = "";
 
-      getUserData().then((data) => {
-        console.log("User Data:", data);
+      const chatInfo = await getUserData().then((data) => {
+        return data;
       });
-
-      return;
 
       const thinkingElem = document.createElement("div");
       thinkingElem.setAttribute("class", "bot-message-container");
@@ -312,6 +305,8 @@ async function onSendButtonClick() {
       const payload = {
         requestParams: {
           user_prompt: messageToSendToBackend,
+          chat_info: chatInfo,
+          type: "customer-inquiry-bot",
         },
         uid: "chatbot-website",
         email: "chatbot-website",
@@ -414,7 +409,7 @@ async function onSendButtonClick() {
                 }
               }
               thinkingElem.style.display = "none";
-              if (typeof messages === "object" && messages.emailString) {
+              if (messages && typeof messages === "object" && messages?.emailString) {
                 fullMessage = messages;
               } else {
                 fullMessage += messages;
@@ -453,7 +448,6 @@ async function onSendButtonClick() {
                       messages = this.cleanEmailString(finalMessage);
                     }
                   }
-                  console.log("messages2 - " + messages);
                   thinkingElem.style.display = "none";
                   fullMessage += messages;
                   appendBotMessageElement(fullMessage || "", messageId);
