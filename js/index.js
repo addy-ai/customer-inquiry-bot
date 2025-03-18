@@ -285,6 +285,12 @@ async function onSendButtonClick() {
       addMessageToChat(message, "customer");
       messageInput.value = "";
 
+      getUserData().then((data) => {
+        console.log("User Data:", data);
+      });
+
+      return;
+
       const thinkingElem = document.createElement("div");
       thinkingElem.setAttribute("class", "bot-message-container");
       let thinkingInnerHTML = chatbotThinking;
