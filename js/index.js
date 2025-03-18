@@ -25,7 +25,7 @@ data.quickPrompts =
 data.primaryColor ||= "#745DDE";
 data.primaryColorName ||= "Purple";
 
-data.chatId = uuidv4();
+data.chatId = "website-chatbot" + uuidv4();
 
 data.primaryColor &&
   document.documentElement.style.setProperty(
@@ -58,12 +58,12 @@ let chatbotAPI =
   data.env == "development"
     ? "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer"
     : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer";
-let backendAPI = 
+let backendAPI =
   data.env == "local"
     ? "http://127.0.0.1:5003/addy-ai-dev/us-central1"
-    : data.env == "development" 
-      ? "https://backend-dev-111911035666.us-central1.run.app" 
-      : "https://backend-prod-zquodzeuva-uc.a.run.app"
+    : data.env == "development"
+    ? "https://backend-dev-111911035666.us-central1.run.app"
+    : "https://backend-prod-zquodzeuva-uc.a.run.app";
 // let backendAPI = "http://127.0.0.1:5003/addy-ai-dev/us-central1";
 const chatHistory = document.querySelector("#chat-history");
 const sendBtn = document.querySelector("#send-btn");
@@ -75,7 +75,34 @@ sendBtn.disabled = true;
 
 window.onload = async function () {
   initializeBot();
+  // Example usage: Send data to your backend
+  getUserData().then((data) => {
+    console.log("User Data:", data);
+  });
 };
+
+async function getUserData() {
+  let browserInfo = {
+    userAgent: navigator.userAgent,
+    language: navigator.language,
+    screenWidth: window.outerWidth,
+    screenHeight: window.outerHeight,
+    referrerUrl: document.referrer,
+    currentPageUrl: window.location.href,
+    currentHostname: window.location.hostname,
+    networkConnection: navigator.connection
+      ? navigator.connection.effectiveType
+      : "unknown",
+  };
+
+  // Get IP and Location from ip-api.com
+  let locationInfo = await fetch("http://ip-api.com/json/")
+    .then((response) => response.json())
+    .catch((error) => ({ error: "Could not fetch IP info" }));
+
+  return { ...browserInfo, ip: locationInfo };
+}
+
 
 function addMessageToChat(message, type) {
   const messageElem = document.createElement("div");
@@ -107,7 +134,7 @@ function createBotMessageElement(message) {
 }
 const renderer = new marked.Renderer();
 renderer.paragraph = function (text) {
-  console.log(text)
+  console.log(text);
   return text;
 };
 
@@ -420,7 +447,7 @@ async function onSendButtonClick() {
                       messages = this.cleanEmailString(finalMessage);
                     }
                   }
-              console.log("messages2 - " + messages);
+                  console.log("messages2 - " + messages);
                   thinkingElem.style.display = "none";
                   fullMessage += messages;
                   appendBotMessageElement(fullMessage || "", messageId);
