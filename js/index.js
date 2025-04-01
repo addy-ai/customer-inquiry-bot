@@ -95,6 +95,11 @@ async function getUserData() {
       ? navigator.connection.effectiveType
       : "unknown",
   };
+  console.log("browserInfo");
+  console.log(browserInfo);
+  console.log(window.parent.location.hostname);
+  console.log(window.parent.location);
+  console.log(window.parent);
   // Get IP and Location from ip-api.com
   let locationInfo = await fetch("http://ip-api.com/json/")
     .then((response) => response.json())
