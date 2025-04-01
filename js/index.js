@@ -67,6 +67,7 @@ let backendAPI =
     ? "https://backend-dev-111911035666.us-central1.run.app"
     : "https://backend-prod-zquodzeuva-uc.a.run.app";
 
+//backendAPI = "http://127.0.0.1:5003/addy-ai-dev/us-central1";
 const chatHistory = document.querySelector("#chat-history");
 const sendBtn = document.querySelector("#send-btn");
 const messageInput = document.querySelector("#message-input");
