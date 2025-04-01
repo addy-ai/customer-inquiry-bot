@@ -38,6 +38,9 @@ async function getChatBotData() {
     if (env == "development") {
         backend = "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer/bot-info-public";
     }
+    if (env == "test") {
+        backend = "http://127.0.0.1:5003/addy-ai-dev/us-central1/businessInference/infer/bot-info-public";
+    }
     // backend =
     //   "http://127.0.0.1:5003/addy-ai-dev/us-central1/businessInference/infer/bot-info-public";
 

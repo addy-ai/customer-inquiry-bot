@@ -55,16 +55,18 @@ welcomeMessage : "Hello! How can I help you today?"
 let customerAvatarURL = "https://i.imgur.com/WjAIvVp.png";
 let customerName = "You";
 let chatbotAPI =
-  data.env == "development"
+  data.env == "test"
+    ? "http://127.0.0.1:5003/addy-ai-dev/us-central1"
+    : data.env == "development"
     ? "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer"
     : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer";
 let backendAPI =
-  data.env == "local"
+  data.env == "test"
     ? "http://127.0.0.1:5003/addy-ai-dev/us-central1"
     : data.env == "development"
     ? "https://backend-dev-111911035666.us-central1.run.app"
     : "https://backend-prod-zquodzeuva-uc.a.run.app";
-backendAPI = "http://127.0.0.1:5003/addy-ai-dev/us-central1";
+
 const chatHistory = document.querySelector("#chat-history");
 const sendBtn = document.querySelector("#send-btn");
 const messageInput = document.querySelector("#message-input");
@@ -77,6 +79,7 @@ window.onload = async function () {
   initializeBot();
 };
 
+
 async function getUserData() {
   let browserInfo = {
     userAgent: navigator.userAgent,
@@ -86,11 +89,11 @@ async function getUserData() {
     referrerUrl: document.referrer,
     currentPageUrl: window.location.href,
     currentHostname: window.location.hostname,
+    parentHostname: window.parent.location.hostname,
     networkConnection: navigator.connection
       ? navigator.connection.effectiveType
       : "unknown",
   };
-
   // Get IP and Location from ip-api.com
   let locationInfo = await fetch("http://ip-api.com/json/")
     .then((response) => response.json())
@@ -307,6 +310,7 @@ async function onSendButtonClick() {
           user_prompt: messageToSendToBackend,
           chat_info: chatInfo,
           type: "customer-inquiry-bot",
+          publicId: data.publicId,
         },
         uid: "chatbot-website",
         email: "chatbot-website",
