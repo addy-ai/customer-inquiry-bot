@@ -26,6 +26,7 @@ const WIDGET_NAMES = [
     },
 ];
 
+console.log("Bubble script loaded");
 
 // 0. Init the steps
 window.addEventListener("load", async function () {
@@ -128,21 +129,25 @@ function createWidgetView(data) {
     widgetIframe.style.width = "100%";
     widgetIframe.style.paddingTop = "30px";
     widgetIframe.style.paddingBottom = "30px";
+    console.log("Widget iframe created", widgetIframe);
   
     widgetIframe.style.border = "none";
     widgetIframe.setAttribute("srcdoc", widgetIframeHTML);
     window.addyAIData = data;
-    
+    console.log("Widget iframe set", widgetIframe);
     widgetView.append(widgetIframe);
-    
+    console.log("Widget view appended", widgetView);
     const widgetContainer = document.getElementById(scriptTag.id);
+    console.log("Widget container found", widgetContainer);
     if (!widgetContainer) {
         console.error("Widget container not found");
         return;
     }
     widgetContainer.append(widgetView);
+    console.log("Widget container appended", widgetContainer);
     // After widget is loaded, set the iframe height to fit the content
     widgetIframe.onload = () => {
+        console.log("Widget iframe loaded");
         // get the actual scroll height of the contents of the iframe
         updateIframeHeightToItsContent(widgetIframe);
     }   
