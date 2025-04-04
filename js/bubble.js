@@ -32,6 +32,7 @@ window.addEventListener("load", async function () {
     try {
         // 1. Get info for bubble and chatbox
         let data = await getChatBotData();
+        console.log("data fetched", data);
         if (!data) {
             // Some error occured
             console.error("Error: No data found");
@@ -41,18 +42,22 @@ window.addEventListener("load", async function () {
 
         // 2. Create Chatbox and append to body
         let chatbox = createChatbox(data);
+        console.log("Chatbox created");
 
         // 3. Create Bubble Components and append to body, to toggle chatbox
         createBubbleComponents(chatbox, data);
+        console.log("Bubble components created");
 
         chatbotScriptLoaded = true;
         // console.log("Addy AI Chatbot successfully loaded.");
 
         // 4. Create widgets
         if (data?.leadFunnelWidgets?.length) {
+            console.log("Widgets found, creating widget view");
             // There are widgets to show
             // console.log("widgets", data.leadFunnelWidgets);
             createWidgetView(data);
+            console.log("Widget view created");
         }
     } catch (error) {
         console.error("Error:", error);
