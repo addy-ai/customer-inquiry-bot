@@ -6,9 +6,6 @@ const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 const data = JSON.parse(decodeURIComponent(urlParams.get("data")));
 let suggestedPromptClicked = null;
-let interactiveMode = false;
-let interactiveIntent = null;
-let previousQuestionsAndAnswers = [];
 
 // Defaults
 // console.log(queryString);
