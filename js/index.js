@@ -84,6 +84,27 @@ window.onload = async function () {
     listenForInteractiveResponse();
 }
 
+async function getUserData() {
+    let browserInfo = {
+      userAgent: navigator.userAgent,
+      language: navigator.language,
+      screenWidth: window.outerWidth,
+      screenHeight: window.outerHeight,
+      referrerUrl: document.referrer,
+      currentPageUrl: window.location.href,
+      currentHostname: window.location.hostname,
+      networkConnection: navigator.connection
+        ? navigator.connection.effectiveType
+        : "unknown",
+    };
+    // Get IP and Location from ip-api.com
+    let locationInfo = await fetch("http://ip-api.com/json/")
+      .then((response) => response.json())
+      .catch((error) => ({ error: "Could not fetch IP info" }));
+  
+    return { ...browserInfo, ip: locationInfo };
+}
+
 
 function addMessageToChat(message, type) {
   const messageElem = document.createElement("div");
