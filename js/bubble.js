@@ -34,6 +34,7 @@ window.addEventListener("load", async function () {
         let data = await getChatBotData();
         if (!data) {
             // Some error occured
+            console.error("Error: No data found");
             return;
         }
         // console.table({ data })
@@ -48,9 +49,9 @@ window.addEventListener("load", async function () {
         // console.log("Addy AI Chatbot successfully loaded.");
 
         // 4. Create widgets
-        data.widgets = WIDGET_NAMES; // For testing
-        if (data?.widgets?.length) {
+        if (data?.leadFunnelWidgets?.length) {
             // There are widgets to show
+            // console.log("widgets", data.leadFunnelWidgets);
             createWidgetView(data);
         }
     } catch (error) {
@@ -70,9 +71,11 @@ async function getChatBotData() {
     if (env == "test") {
         backend = "http://127.0.0.1:5003/addy-ai-dev/us-central1/businessInference/infer/bot-info-public";
     }
+    if (env == "test-local") {
+        backend = "http://localhost:8080/embeddingsInference/infer/bot-info-public";
+    }
     // backend =
     //   "http://127.0.0.1:5003/addy-ai-dev/us-central1/businessInference/infer/bot-info-public";
-
     const publicId = scriptTag.id;
     const host = window.location.host;
     const data = await fetch(`${backend}/?publicId=${publicId}&host=${host}`, {
@@ -82,17 +85,26 @@ async function getChatBotData() {
         }
     })
     .then((response) => response.json())
-    .then(data => { {
-        return data.data.config;
-    }})
-    .catch((error) => { console.error("Error", error); return undefined; });
-
+    .then(data => { 
+        if (!data.success) throw new Error("Error: No data found");
+        const dataWithWidgets = {
+            ...data?.data?.config,
+            leadFunnelWidgets: data?.data?.leadFunnelWidgets,
+            leadFunnelWidgetsConfig: data?.data?.leadFunnelWidgetsConfig,
+        }
+        return dataWithWidgets;
+    })
+    .catch((error) => {
+        console.error("Error", error);
+        return undefined;
+    });
+    
+    if (!data) return undefined;
     data.primaryColor ||= "#745DDE";
     data.primaryColorName ||= "Purple";
     data.publicId = scriptTag.id;
     data.host = window.location.host;
     data.env = env;
-
     return data;
 }
 
@@ -104,8 +116,42 @@ function createWidgetView(data) {
 
     let widgetView = document.createElement("div");
     widgetView.setAttribute("id", "widgetView");
-    widgetView.innerHTML = `<iframe src="${url}" style="width: 100%; height: 100%;"></iframe>`;
-    document.body.append(widgetView);
+
+    const widgetIframe = document.createElement("iframe");
+    widgetIframe.setAttribute("id", "widgetIframe");
+    widgetIframe.setAttribute("class", "addy-interactive-iframe");
+    widgetIframe.style.width = "100%";
+    widgetIframe.style.paddingTop = "30px";
+    widgetIframe.style.paddingBottom = "30px";
+  
+    widgetIframe.style.border = "none";
+    widgetIframe.setAttribute("srcdoc", widgetIframeHTML);
+    window.addyAIData = data;
+    
+    widgetView.append(widgetIframe);
+    
+    const widgetContainer = document.getElementById(scriptTag.id);
+    if (!widgetContainer) {
+        console.error("Widget container not found");
+        return;
+    }
+    widgetContainer.append(widgetView);
+    // After widget is loaded, set the iframe height to fit the content
+    widgetIframe.onload = () => {
+        // get the actual scroll height of the contents of the iframe
+        updateIframeHeightToItsContent(widgetIframe);
+    }   
+}
+
+// When the widget is resized, update the iframe height to fit the content
+window.addEventListener("resize", () => {
+    const widgetIframe = document.getElementById("widgetIframe");
+    updateIframeHeightToItsContent(widgetIframe);
+});
+
+function updateIframeHeightToItsContent(iframe) {
+    const scrollHeight = iframe.contentWindow.document.body.scrollHeight;
+    iframe.style.height = `${scrollHeight + 200}px`;
 }
 
 // 2. Create the Chatbox which is shown on-click
@@ -134,7 +180,7 @@ function createChatbox(data) {
         borderRadius: '20px',
     });
 
-    chatBox.innerHTML = `<iframe src="${url}" style="width: 100%; height: 100%;"></iframe>`;
+    chatBox.innerHTML = `<iframe src="${url}" style="width: 100%; height: 100%; border: none;"></iframe>`;
     document.body.append(chatBox);
 
     function handleSmallScreens() {
@@ -267,3 +313,26 @@ function createBubbleComponents(chatbox, data) {
     bubble.addEventListener('click', toggleView);
     
 }
+
+const widgetIframeHTML = `<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Addy AI Widget</title>
+    <link rel="stylesheet" href="css/style.css">
+</head> 
+
+<body>
+    <div class="addy-widget-container">
+
+        <div></div>
+        <div class="addy-widget-card-container">
+
+        </div>
+    </div>
+    
+    <script type="text/javascript" src="js/widget.js"></script>
+</body>
+</html>
+`
