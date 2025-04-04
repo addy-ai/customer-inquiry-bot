@@ -327,7 +327,7 @@ const widgetIframeHTML = `<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <title>Addy AI Widget</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/css/style.min.css">
 </head> 
 
 <body>

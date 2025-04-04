@@ -26,9 +26,9 @@ window.addEventListener("load", async function () {
 });
 
 const iconImageLookup = {
-    "refinance": "./img/icons/reload.svg",
-    "buy-a-home": "./img/icons/home.svg",
-    "rates": "./img/icons/chart.svg",
+    "refinance": "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/reload.svg",
+    "buy-a-home": "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/home.svg",
+    "rates": "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/chart.svg",
 }
 
 function initializeWidgets() {
