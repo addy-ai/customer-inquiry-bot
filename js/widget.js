@@ -1,6 +1,7 @@
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
-const data = JSON.parse(decodeURIComponent(urlParams.get('data')));
+// Get the data from the parent
+const data = window?.parent?.addyAIData;
 let interactiveMode = false;
 let widgetId = null;
 let previousQuestionsAndAnswers = [];
@@ -12,17 +13,29 @@ const TOTAL_EXPECTED_QUESTIONS = 15;
 
 let backendAPI = data.env == "development" ? "https://backend-dev-111911035666.us-central1.run.app" : "https://backend-prod-zquodzeuva-uc.a.run.app"
 
+if (data.env == "test-local") {
+    backendAPI = "http://localhost:8080";
+}
 
-data.primaryColor ||= "#745DDE";
+data.primaryColor = data?.leadFunnelWidgetsConfig?.primaryColor ||
+    data?.primaryColor || "#745DDE";
 
 window.addEventListener("load", async function () {
     initializeWidgets();
     listenForInteractiveResponse();
 });
 
+const iconImageLookup = {
+    "refinance": "./img/icons/reload.svg",
+    "buy-a-home": "./img/icons/home.svg",
+    "rates": "./img/icons/chart.svg",
+}
+
 function initializeWidgets() {
-    data.widgets.forEach(widget => {
-        const widgetCard = createWidgetCard(widget);
+    data.leadFunnelWidgets.forEach(widget => {
+        const widgetCard = createWidgetCard({...widget,
+            iconImage: iconImageLookup[widget.id] || "./img/icons/home.svg"
+        });
         document.body.querySelector(".addy-widget-card-container").appendChild(widgetCard);
         // Add event listener to the button
         widgetCard.querySelector("button").addEventListener("click", () => {
@@ -31,6 +44,27 @@ function initializeWidgets() {
             createAgentView(widget);
         });
     });
+}
+
+function startFullScreenInteractiveMode() {
+    // Get the widgetIframe parent element
+    const widgetIframeParent = window.parent.document.querySelector("#widgetIframe").parentElement;
+    widgetIframeParent.style.height = "100vh";
+    widgetIframeParent.style.width = "100vw";
+    widgetIframeParent.style.position = "fixed";
+    widgetIframeParent.style.top = "0";
+    widgetIframeParent.style.left = "0";
+    widgetIframeParent.style.backgroundColor = "#FFFFFF";
+}
+
+function endFullScreenInteractiveMode() {
+    const widgetIframeParent = window.parent.document.querySelector("#widgetIframe").parentElement;
+    widgetIframeParent.style.height = "unset";
+    widgetIframeParent.style.width = "unset";
+    widgetIframeParent.style.position = "unset";
+    widgetIframeParent.style.top = "unset";
+    widgetIframeParent.style.left = "unset";
+    widgetIframeParent.style.backgroundColor = "unset";
 }
 
 function createWidgetCard(widget) {
@@ -48,6 +82,15 @@ function createWidgetCard(widget) {
     
     widgetCard.innerHTML = template;
     return widgetCard;
+}
+
+function closeTheView() {
+    // Get agent view
+    const agentView = document.body.querySelector(".addy-agent-view");
+    if (agentView) {
+        agentView.remove();
+        endFullScreenInteractiveMode();
+    }
 }
 
 async function createAgentView(widget) {
@@ -82,7 +125,7 @@ async function createAgentView(widget) {
     // Get close button and create the action to close the agent view
     let closeButton = agentView.querySelector(".addy-close-button");
     closeButton.addEventListener("click", () => {
-        agentView.remove();
+        closeTheView();
     });
     
     // Add back button click listener
@@ -90,6 +133,7 @@ async function createAgentView(widget) {
     backButton.addEventListener("click", handleBackButtonClick);
     
     document.body.appendChild(agentView);
+    startFullScreenInteractiveMode();
 
     // Reset the current question index
     currentQuestionIndex = 0;
@@ -152,9 +196,18 @@ function handleBackButtonClick() {
 
 function handleNextQuestion(nextQuestion) {
     if (nextQuestion.type == "endOfFlow") {
+        // Remove the current question element
+        document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-form-section").remove();
+        // Get the last ".addy-agent-form-section" element and hide it
+        const lastQuestionElement = document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-form-section:last-child");
+        lastQuestionElement.style.display = "none";
         // Create success screen
         const successScreen = createSuccessScreen(nextQuestion);
         document.body.querySelector(".addy-agent-view").appendChild(successScreen);
+        // Close button on click listener
+        successScreen.querySelector(".addy-interactive-primary-button").addEventListener("click", () => {
+            closeTheView();
+        });
         return;
     }
     
@@ -218,7 +271,7 @@ function handleNextQuestion(nextQuestion) {
 function addNextButtonOnClickListener(nextQuestionElement) {
     const nextButton = nextQuestionElement.querySelector(".addy-interactive-primary-button");
     if (nextButton) {
-        console.log("Adding next button on click listener");
+        // console.log("Adding next button on click listener");
         nextButton.addEventListener("click", () => {
             // Remove the old click listener to prevent multiple bindings
             nextButton.removeEventListener("click", () => getNextQuestion());
@@ -275,7 +328,7 @@ function listenForInteractiveResponse() {
     // Window listen for postMessage
     window.addEventListener("message", (event) => {
         if (event.data.answerSelected) {
-            console.log("Answer selected", event.data.answerSelected);
+            // console.log("Answer selected", event.data.answerSelected);
             const question = event.data.answerSelected.question;
             const answer = event.data.answerSelected.answer;
             if (!(question && answer)) {
@@ -292,7 +345,7 @@ function listenForInteractiveResponse() {
             // Save the last known question UI state as the iframe srcdoc state
             lastKnownQuestionUIState[question] = event.data.answerSelected.uiState;
 
-            console.log("Previous questions and answers", previousQuestionsAndAnswers);
+            // console.log("Previous questions and answers", previousQuestionsAndAnswers);
             
             // For selector type, get next question immediately
             // For other types, wait for the next button click
@@ -311,9 +364,9 @@ async function getNextQuestion() {
     }
 
     // If it's selector, then get next question instantly without waiting to click on next button
-    console.log("Getting next question");
+    // console.log("Getting next question");
     const nextQuestionResponse = await makeAPICallForNextQuestion();
-    console.log("Next question response", nextQuestionResponse);
+    // console.log("Next question response", nextQuestionResponse);
     if (nextQuestionResponse?.nextQuestion) {
         handleNextQuestion(nextQuestionResponse);
     }
@@ -357,7 +410,7 @@ function createSuccessScreen(nextQuestion) {
         nextQuestion.nextQuestion = JSON.parse(nextQuestion.nextQuestion);
     }
     const successScreen = document.createElement("div");
-    successScreen.setAttribute("class", "addy-agent-form-section");
+    successScreen.setAttribute("class", "addy-agent-form-section addy-agent-success-screen");
     successScreen.innerHTML = successScreenHTML
         .replaceAll("{{title}}", nextQuestion.nextQuestion.title)
         .replaceAll("{{message}}", nextQuestion.nextQuestion.message)
@@ -372,7 +425,7 @@ const widgetCardHTMLTemplate = `
 <div class="addy-widget-card">
     <div class="addy-widget-card-header">
       <img src="{{iconImage}}" />
-      <h2>{{title}}</h2>
+      <h2>{{name}}</h2>
     </div>
     
     <p>{{description}}</p>
@@ -389,9 +442,9 @@ const nextQuestionHTMLTemplate = `
 
 const successScreenHTML = `
     <div class="addy-agent-form-section-header">
-        <div class="addy-agent-form-section-header-avatar-container" style="display: flex; gap: 15px; align-items: center;">
+        <div class="addy-agent-form-section-header-avatar-container" style="display: flex; gap: 15px; align-items: start;">
             <img width="30" height="30" src="{{checkIcon}}" />
-            <h2 class="addy-agent-form-section-question">{{title}}</h2>
+            <h2 class="addy-agent-form-section-question" style="text-align: left; margin-top: 0px;">{{title}}</h2>
         </div>
 
         <p style="margin-bottom: 30px; margin-top: 0px; text-align: center;">{{message}}</p>

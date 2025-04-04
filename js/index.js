@@ -78,7 +78,6 @@ sendBtn.disabled = true;
 
 window.onload = async function () {
     initializeBot();
-    listenForInteractiveResponse();
 }
 
 async function getUserData() {

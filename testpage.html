@@ -10,17 +10,8 @@
             margin: 0;
             padding: 0;
             height: 100%;
-            overflow: hidden;
+            overflow: scroll;
             /* background-image: url("https://i.imgur.com/46b8c6c.png"); */
-        }
-
-        iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
         }
 
         .background-image-homepage {
@@ -39,13 +30,19 @@
     <div class="background-image-homepage">
 
     </div>
+
+    <div id="b882907a-6540-42fe-a4f0-4771798b6f53" style="padding-top: 100px; padding-bottom: 100px;">
+
+    </div>
     <!-- Including the widget script outside the iframe -->
     
     <!-- <script src="https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/js/bubble.min.js"
         id="145d08a1-5732-4a3f-90d4-3f913029c53f" title="embed"></script> -->
-<script src="https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/js/bubble.min.js"
-    id="0d05d4e3-6b3d-4f23-bca3-70cf95c79e5b" title="embed" env="production"></script>
-    <!-- <script src="./js/bubble.js" id="3ddaffd6-6380-45d6-81dd-0975937768c5" title="embed" env="development"></script> -->
+    <!-- Production -->
+    <!-- <script src="https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/js/bubble.min.js"
+        id="0d05d4e3-6b3d-4f23-bca3-70cf95c79e5b" title="embed" env="production"></script> -->
+    <!-- Local development -->
+    <script src="./js/bubble.js" id="b882907a-6540-42fe-a4f0-4771798b6f53" title="embed" env="test-local"></script>
     <!-- <script>
         (function () {if (!window.chatbase || window.chatbase("getState") !== "initialized") {window.chatbase = (...arguments) => {if (!window.chatbase.q) {window.chatbase.q = []} window.chatbase.q.push(arguments)}; window.chatbase = new Proxy(window.chatbase, {get(target, prop) {if (prop === "q") {return target.q} return (...args) => target(prop, ...args)} })} const onLoad = function () {const script = document.createElement("script"); script.src = "https://www.chatbase.co/embed.min.js"; script.id = "li481GFF5s5tGE_j5me64"; script.domain = "www.chatbase.co"; document.body.appendChild(script)}; if (document.readyState === "complete") {onLoad()} else {window.addEventListener("load", onLoad)} })();
     </script> -->
