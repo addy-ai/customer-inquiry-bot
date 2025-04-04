@@ -343,7 +343,7 @@ const widgetIframeHTML = `<!DOCTYPE html>
         </div>
     </div>
     
-    <script type="text/javascript" src="js/widget.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/js/widget.min.js"></script>
 </body>
 </html>
 `
