@@ -137,7 +137,8 @@ function createWidgetView(data) {
     console.log("Widget iframe set", widgetIframe);
     widgetView.append(widgetIframe);
     console.log("Widget view appended", widgetView);
-    const widgetContainer = document.getElementById(scriptTag.id);
+    // Get the container where addy-widget-id is set to the scriptTag.id
+    const widgetContainer = document.querySelector(`[addy-widget-id="${scriptTag.id}"]`);
     console.log("Widget container found", widgetContainer);
     if (!widgetContainer) {
         console.error("Widget container not found");
