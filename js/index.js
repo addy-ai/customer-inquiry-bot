@@ -13,7 +13,7 @@ let previousQuestionsAndAnswers = [];
 // Defaults
 // console.log(queryString);
 // console.log(data)
-data.avatarURL ||= "https://i.imgur.com/deEKpap.jpg";
+data.avatarURL ||= "https://i.imgur.com/9VBT3XI.png";
 data.name ||= "My Chatbot"
 data.chatbotName ||= "Addy";
 data.welcomeMessage ||= "Hello! How can I help you today?";
@@ -128,7 +128,6 @@ function createBotMessageElement(message, interactive=false, interactiveData=nul
 function addNextButtonOnClickListener(messageElem) {
     const nextButton = messageElem.querySelector(".addy-interactive-primary-button");
     if (nextButton) {
-        console.log("Adding next button on click listener");
         nextButton.addEventListener("click", () => getNextQuestion());
     }
 }
@@ -145,10 +144,9 @@ function createInteractiveBotMessageElement(div, interactiveData) {
     if (interactiveData?.nextQuestion && typeof interactiveData.nextQuestion == "string") {
         interactiveData.nextQuestion = JSON.parse(interactiveData.nextQuestion);
     }
-    console.log("Interactive data", interactiveData);
+    // console.log("Interactive data", interactiveData);
     if (interactiveData.intent == interactiveIntent) {
         if (!interactiveData?.nextQuestion?.question) {
-            console.log("No question found");
             return div;
         }
 
@@ -194,7 +192,6 @@ function listenForInteractiveResponse() {
     // Window listen for postMessage
     window.addEventListener("message", (event) => {
         if (event.data.answerSelected) {
-            console.log("Answer selected", event.data.answerSelected);
             const question = event.data.answerSelected.question;
             const answer = event.data.answerSelected.answer;
             if (!(question && answer)) {
@@ -208,7 +205,6 @@ function listenForInteractiveResponse() {
             } else {
                 previousQuestionsAndAnswers[questionIndex].answer = answer;
             }
-            console.log("Previous questions and answers", previousQuestionsAndAnswers);
             if (event.data.answerSelected.type == "selector") {
                 getNextQuestion(event.data.answerSelected);
             }
@@ -218,9 +214,7 @@ function listenForInteractiveResponse() {
 
 async function getNextQuestion() {
     // If it's selector, then get next question instantly without waiting to click on next button
-    console.log("Getting next question");
     const nextQuestionResponse = await makeAPICallForNextQuestion();
-    console.log("Next question response", nextQuestionResponse);
     if (nextQuestionResponse?.nextQuestion) {
         createBotMessageElement("", true, {...nextQuestionResponse,
             "intent": interactiveIntent
@@ -252,7 +246,6 @@ async function makeAPICallForNextQuestion() {
 }
 
 function initializeBot() {
-    // console.log('loading bot')
     const loadingView = document.querySelector(".loading-view");
     if (loadingView) loadingView.style.display = "flex";
 
@@ -323,7 +316,6 @@ function showBotWelcomeMessage() {
 async function onSendButtonClick() {
     let btnClicked = async (e) => {
         e.preventDefault();
-        // console.log('clicked')
         let message = messageInput.value;
         
         if (message) {
