@@ -2,6 +2,29 @@ const scriptTag = document.currentScript;
 window.chatbotScriptLoaded = false;
 window.isChatbotFirstClick = true;
 
+const WIDGET_NAMES = [
+    {
+        id: "buy-a-home",
+        title: "Buy a home",
+        description: "Start your home buying journey and get pre-approved in minutes.",
+        buttonText: "Get Started",
+        iconImage: "./img/icons/home.svg",
+    },
+    {
+        id: "refinance",
+        title: "Refinance",
+        description: "Explore personalized refinancing options tailored for you.",
+        buttonText: "Get Started",
+        iconImage: "./img/icons/reload.svg",
+    },
+    {
+        id: "rate",
+        title: "Rates",
+        description: "Quickly check the latest rates and loan programs personalized for you.",
+        buttonText: "Get Started",
+        iconImage: "./img/icons/chart.svg",
+    },
+];
 
 
 // 0. Init the steps
@@ -13,7 +36,6 @@ window.addEventListener("load", async function () {
             // Some error occured
             return;
         }
-
         // console.table({ data })
 
         // 2. Create Chatbox and append to body
@@ -24,6 +46,13 @@ window.addEventListener("load", async function () {
 
         chatbotScriptLoaded = true;
         // console.log("Addy AI Chatbot successfully loaded.");
+
+        // 4. Create widgets
+        data.widgets = WIDGET_NAMES; // For testing
+        if (data?.widgets?.length) {
+            // There are widgets to show
+            createWidgetView(data);
+        }
     } catch (error) {
         console.error("Error:", error);
     }
@@ -62,6 +91,18 @@ async function getChatBotData() {
     data.env = env;
 
     return data;
+}
+
+function createWidgetView(data) {
+    let slug = `?publicId=${scriptTag.id}&header=none&data=${encodeURIComponent(JSON.stringify(data))}`
+    const url = window.location.host === ''
+        ? `file://${window.location.pathname.replace('testpage.html', 'widget.html')}${slug}`
+        : `https://addy-ai.github.io/customer-inquiry-bot/widget/${slug}`;
+
+    let widgetView = document.createElement("div");
+    widgetView.setAttribute("id", "widgetView");
+    widgetView.innerHTML = `<iframe src="${url}" style="width: 100%; height: 100%;"></iframe>`;
+    document.body.append(widgetView);
 }
 
 // 2. Create the Chatbox which is shown on-click

@@ -6,11 +6,14 @@ const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 const data = JSON.parse(decodeURIComponent(urlParams.get('data')))
 let suggestedPromptClicked = null;
+let interactiveMode = false;
+let interactiveIntent = null;
+let previousQuestionsAndAnswers = [];
 
 // Defaults
 // console.log(queryString);
 // console.log(data)
-data.avatarURL ||= "https://i.imgur.com/9VBT3XI.png";
+data.avatarURL ||= "https://i.imgur.com/deEKpap.jpg";
 data.name ||= "My Chatbot"
 data.chatbotName ||= "Addy";
 data.welcomeMessage ||= "Hello! How can I help you today?";
@@ -52,7 +55,7 @@ let customerAvatarURL = "https://i.imgur.com/WjAIvVp.png";
 let customerName = "You";
 let chatbotAPI = data.env == "development" ? "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer" : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer";
 let backendAPI = data.env == "development" ? "https://backend-dev-111911035666.us-central1.run.app" : "https://backend-prod-zquodzeuva-uc.a.run.app"
-// let backendAPI = "http://127.0.0.1:5003/addy-ai-dev/us-central1"
+// backendAPI = "http://localhost:8080"; // For local development TODO: Remove this before deploying
 const chatHistory = document.querySelector("#chat-history");
 const sendBtn = document.querySelector("#send-btn");
 const messageInput = document.querySelector("#message-input");
@@ -63,6 +66,7 @@ sendBtn.disabled = true;
 
 window.onload = async function () {
     initializeBot();
+    listenForInteractiveResponse();
 }
 
 function addMessageToChat(message, type) {
@@ -74,24 +78,177 @@ function addMessageToChat(message, type) {
     chatHistory.append(messageElem);
 }
 
-function createBotMessageElement(message) {
+function createBotMessageElement(message, interactive=false, interactiveData=null) {
     const messageId = `bot-message-${Date.now()}`;
-    const messageElem = document.createElement("div");
-
+    let messageElem = document.createElement("div");
     messageElem.setAttribute("class", "bot-message-container");
     
     const formattedMessage = marked.parse(message);
+
+    if (interactive && interactiveData) {
+        interactiveMode = true;
+        interactiveIntent = interactiveData.intent;
+        messageElem = createInteractiveBotMessageElement(messageElem, interactiveData);
+    }
 
     let innerHTML = chatbotMessageHTML.replace("{{messageId}}", messageId);
     innerHTML = innerHTML.replace("{{chatbotName}}", data.chatbotName);
     innerHTML = innerHTML.replace("{{chatbotAvatarURL}}", data.avatarURL);
     innerHTML = innerHTML.replace("{{message}}", formattedMessage);
-    messageElem.innerHTML = innerHTML;
+    
+    // Create a temporary container to parse the HTML
+    const tempContainer = document.createElement('div');
+    tempContainer.innerHTML = innerHTML;
+    
+    // Find the bot-message div in the temporary container
+    const botMessageDiv = tempContainer.querySelector('.bot-message');
+    if (botMessageDiv) {
+        // Move all children from messageElem to the bot-message div
+        while (messageElem.firstChild) {
+            botMessageDiv.appendChild(messageElem.firstChild);
+        }
+    }
+    
+    // Set the final HTML
+    messageElem.innerHTML = tempContainer.innerHTML;
 
     chatHistory.append(messageElem);
     chatHistory.scrollTop = chatHistory.scrollHeight;
 
+    if (interactive) {
+        // Get the iframe and set up load event
+        const iframe = messageElem.querySelector("iframe");
+        updateIframeHeightToItsContent(iframe, interactiveData);
+        addNextButtonOnClickListener(messageElem);
+    }
+
     return messageId;
+}
+
+function addNextButtonOnClickListener(messageElem) {
+    const nextButton = messageElem.querySelector(".addy-interactive-primary-button");
+    if (nextButton) {
+        console.log("Adding next button on click listener");
+        nextButton.addEventListener("click", () => getNextQuestion());
+    }
+}
+
+function updateIframeHeightToItsContent(iframe, interactiveData) {
+    if (!iframe) return;
+    iframe.addEventListener('load', async () => {
+        const contentHeight = iframe.contentWindow.document.body.scrollHeight + (interactiveData?.type == "textInput" ? 20 : 5);
+        iframe.style.height = `${contentHeight}px`;
+    });
+}
+
+function createInteractiveBotMessageElement(div, interactiveData) {
+    if (interactiveData?.nextQuestion && typeof interactiveData.nextQuestion == "string") {
+        interactiveData.nextQuestion = JSON.parse(interactiveData.nextQuestion);
+    }
+    console.log("Interactive data", interactiveData);
+    if (interactiveData.intent == interactiveIntent) {
+        if (!interactiveData?.nextQuestion?.question) {
+            console.log("No question found");
+            return div;
+        }
+
+        // Create a parent div to contain all interactive elements
+        const interactiveContainer = document.createElement("div");
+        interactiveContainer.setAttribute("class", "addy-interactive-container");
+
+        // Create the div to contain the question text
+        const questionTextDiv = document.createElement("div");
+        questionTextDiv.setAttribute("class", "addy-interactive-question-text");
+        questionTextDiv.innerHTML = interactiveData?.nextQuestion?.question;
+
+        // Create an iframe to display the question ui
+        const iframe = document.createElement("iframe");
+        iframe.setAttribute("class", "addy-interactive-iframe");
+        // Now set the srcdoc after the handler is in place
+        iframe.setAttribute("srcdoc", interactiveData.uiComponent
+            .replaceAll("F3F4F6", "FFFFFF")
+            .replaceAll("EEF1F5", "FFFFFF")
+        );
+
+        // Append question and iframe to the container
+        interactiveContainer.appendChild(questionTextDiv);
+        interactiveContainer.appendChild(iframe);
+
+        // If it's not a selector, then add a next button
+        if (interactiveData?.type != "selector") {
+            const nextButton = document.createElement("button");
+            nextButton.setAttribute("class", "addy-interactive-primary-button");
+            nextButton.innerHTML = "Next";
+            nextButton.style.backgroundColor = data.primaryColor;
+            nextButton.style.marginBottom = "10px";
+
+            interactiveContainer.appendChild(nextButton);
+        }
+        // Append the container to the main div
+        div.appendChild(interactiveContainer);
+    }
+    return div;
+}
+
+function listenForInteractiveResponse() {
+    // Window listen for postMessage
+    window.addEventListener("message", (event) => {
+        if (event.data.answerSelected) {
+            console.log("Answer selected", event.data.answerSelected);
+            const question = event.data.answerSelected.question;
+            const answer = event.data.answerSelected.answer;
+            if (!(question && answer)) {
+                console.error("No question or answer found");
+                return;
+            }
+            // Find the question in the previousQuestionsAndAnswers array or add it if it doesn't exist
+            const questionIndex = previousQuestionsAndAnswers.findIndex(q => q.question == question);
+            if (questionIndex == -1) {
+                previousQuestionsAndAnswers.push({question, answer});
+            } else {
+                previousQuestionsAndAnswers[questionIndex].answer = answer;
+            }
+            console.log("Previous questions and answers", previousQuestionsAndAnswers);
+            if (event.data.answerSelected.type == "selector") {
+                getNextQuestion(event.data.answerSelected);
+            }
+        }
+    });
+}
+
+async function getNextQuestion() {
+    // If it's selector, then get next question instantly without waiting to click on next button
+    console.log("Getting next question");
+    const nextQuestionResponse = await makeAPICallForNextQuestion();
+    console.log("Next question response", nextQuestionResponse);
+    if (nextQuestionResponse?.nextQuestion) {
+        createBotMessageElement("", true, {...nextQuestionResponse,
+            "intent": interactiveIntent
+        });
+    }
+    
+}
+
+async function makeAPICallForNextQuestion() {
+    const payload = {
+        uid: "chatbot-website",
+        agentPublicId: data.publicId,
+        previousQuestionsAndAnswers: previousQuestionsAndAnswers,
+    };
+    const requestOptions = {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    };
+    const response = await fetch(backendAPI + "/api/loan-pricing-agent/get-next-question", requestOptions)
+        .then(response => response.json())
+        .then(data => {
+            return data;
+        })
+        .catch(error => {
+            console.error("Error making API call for next question", error);
+        });
+    return response;
 }
 
 function initializeBot() {
@@ -222,8 +379,24 @@ async function onSendButtonClick() {
             const response = await fetch(ENDPOINT, requestOptions)
                 .then(async response => {
                     if (!response.body) throw new Error("No response body");
+
+                    // Clone the response so we can read it twice
+                    const clonedResponse = response.clone();
                     
-                    const reader = response.body.getReader();
+                    // First try to read as JSON
+                    try {
+                        const responseData = await response.json();
+                        if (responseData?.intent == interactiveIntent) {
+                            return responseData;
+                        }
+                    } catch (error) {
+                        console.error("Error getting response data", error);
+                        // If JSON parsing fails, proceed with stream reading
+                    }
+                    
+                    // If we get here, either JSON parsing failed or it wasn't a loan application
+                    // Read the stream from the cloned response
+                    const reader = clonedResponse.body.getReader();
                     const decoder = new TextDecoder();
                     let fullResponse = "";
 
@@ -238,7 +411,14 @@ async function onSendButtonClick() {
                     return fullResponse;
                 })
                 .then(fullResponse => {
+                    
                     thinkingElem.style.display = "none";
+
+                    // If the response is for the loan pricing agent, show the response
+                    if (fullResponse?.intent == interactiveIntent) {
+                        createBotMessageElement("", true, fullResponse);
+                        return;
+                    }
                     
                     try {
                       // Safely split JSON objects using newlines or another reliable delimiter
