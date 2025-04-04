@@ -115,10 +115,6 @@ async function getChatBotData() {
 }
 
 function createWidgetView(data) {
-    let slug = `?publicId=${scriptTag.id}&header=none&data=${encodeURIComponent(JSON.stringify(data))}`
-    const url = window.location.host === ''
-        ? `file://${window.location.pathname.replace('testpage.html', 'widget.html')}${slug}`
-        : `https://addy-ai.github.io/customer-inquiry-bot/widget/${slug}`;
 
     let widgetView = document.createElement("div");
     widgetView.setAttribute("id", "widgetView");
