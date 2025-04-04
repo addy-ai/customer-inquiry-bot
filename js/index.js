@@ -6,6 +6,9 @@ const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 const data = JSON.parse(decodeURIComponent(urlParams.get("data")));
 let suggestedPromptClicked = null;
+let interactiveMode = false;
+let interactiveIntent = null;
+let previousQuestionsAndAnswers = [];
 
 // Defaults
 // console.log(queryString);
@@ -77,29 +80,8 @@ const promptContainer = document.querySelector(".auto-prompts-container");
 sendBtn.disabled = true;
 
 window.onload = async function () {
-  initializeBot();
-};
-
-
-async function getUserData() {
-  let browserInfo = {
-    userAgent: navigator.userAgent,
-    language: navigator.language,
-    screenWidth: window.outerWidth,
-    screenHeight: window.outerHeight,
-    referrerUrl: document.referrer,
-    currentPageUrl: window.location.href,
-    currentHostname: window.location.hostname,
-    networkConnection: navigator.connection
-      ? navigator.connection.effectiveType
-      : "unknown",
-  };
-  // Get IP and Location from ip-api.com
-  let locationInfo = await fetch("http://ip-api.com/json/")
-    .then((response) => response.json())
-    .catch((error) => ({ error: "Could not fetch IP info" }));
-
-  return { ...browserInfo, ip: locationInfo };
+    initializeBot();
+    listenForInteractiveResponse();
 }
 
 
@@ -111,6 +93,7 @@ function addMessageToChat(message, type) {
   }
   chatHistory.append(messageElem);
 }
+
 
 function createBotMessageElement(message) {
   const messageId = `bot-message-${Date.now()}`;
@@ -135,6 +118,7 @@ const renderer = new marked.Renderer();
 renderer.paragraph = function (text) {
   return text;
 };
+
 
 function convertMarkdownToHTML(text) {
   return marked.parse(text);
@@ -274,6 +258,7 @@ function getJSONArray(str) {
 }
 
 async function onSendButtonClick() {
+
   let btnClicked = async (e) => {
     e.preventDefault();
     // console.log('clicked')
