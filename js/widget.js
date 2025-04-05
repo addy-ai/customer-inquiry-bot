@@ -100,7 +100,7 @@ async function createAgentView(widget) {
     agentView.setAttribute("class", "addy-agent-view");
     agentView.innerHTML = `
         <button class="addy-close-button">
-            <img src="./img/icons/close.svg" />
+            <img src="https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/close.svg" />
         </button>
     `;
     // Create a header which will have a progress bar and then right below will
@@ -114,7 +114,7 @@ async function createAgentView(widget) {
         </div>
         <div class="addy-agent-view-header-back-button-container">
             <button class="addy-back-button">
-                <img width="22" height="22" src="./img/icons/back.svg" />
+                <img width="22" height="22" src="https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/back.svg" />
             </button>
 
             <p class="addy-agent-view-header-progress-text">0%</p>
