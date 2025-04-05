@@ -55,6 +55,7 @@ function startFullScreenInteractiveMode() {
     widgetIframeParent.querySelector("iframe").style.height = "100%";
     widgetIframeParent.style.width = "100vw";
     widgetIframeParent.style.position = "fixed";
+    widgetIframeParent.style.zIndex = "9999999";
     widgetIframeParent.style.top = "0";
     widgetIframeParent.style.left = "0";
     widgetIframeParent.style.backgroundColor = "#FFFFFF";
@@ -69,6 +70,7 @@ function endFullScreenInteractiveMode() {
     }
     widgetIframeParent.style.width = "unset";
     widgetIframeParent.style.position = "unset";
+    widgetIframeParent.style.zIndex = "unset";
     widgetIframeParent.style.top = "unset";
     widgetIframeParent.style.left = "unset";
     widgetIframeParent.style.backgroundColor = "unset";
