@@ -2,30 +2,6 @@ const scriptTag = document.currentScript;
 window.chatbotScriptLoaded = false;
 window.isChatbotFirstClick = true;
 
-const WIDGET_NAMES = [
-    {
-        id: "buy-a-home",
-        title: "Buy a home",
-        description: "Start your home buying journey and get pre-approved in minutes.",
-        buttonText: "Get Started",
-        iconImage: "./img/icons/home.svg",
-    },
-    {
-        id: "refinance",
-        title: "Refinance",
-        description: "Explore personalized refinancing options tailored for you.",
-        buttonText: "Get Started",
-        iconImage: "./img/icons/reload.svg",
-    },
-    {
-        id: "rate",
-        title: "Rates",
-        description: "Quickly check the latest rates and loan programs personalized for you.",
-        buttonText: "Get Started",
-        iconImage: "./img/icons/chart.svg",
-    },
-];
-
 console.log("Bubble script loaded");
 
 // 0. Init the steps
