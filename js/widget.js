@@ -50,6 +50,7 @@ function startFullScreenInteractiveMode() {
     // Get the widgetIframe parent element
     const widgetIframeParent = window.parent.document.querySelector("#widgetIframe").parentElement;
     widgetIframeParent.style.height = "100vh";
+    widgetIframeParent.querySelector("iframe").style.height = "100%";
     widgetIframeParent.style.width = "100vw";
     widgetIframeParent.style.position = "fixed";
     widgetIframeParent.style.top = "0";
@@ -60,6 +61,7 @@ function startFullScreenInteractiveMode() {
 function endFullScreenInteractiveMode() {
     const widgetIframeParent = window.parent.document.querySelector("#widgetIframe").parentElement;
     widgetIframeParent.style.height = "unset";
+    widgetIframeParent.querySelector("iframe").style.height = "unset";
     widgetIframeParent.style.width = "unset";
     widgetIframeParent.style.position = "unset";
     widgetIframeParent.style.top = "unset";
