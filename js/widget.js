@@ -27,14 +27,14 @@ window.addEventListener("load", async function () {
 
 const iconImageLookup = {
     "refinance": "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/reload.svg",
-    "buy-a-home": "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/home.svg",
+    "buy-home": "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/home.svg",
     "rates": "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/chart.svg",
 }
 
 function initializeWidgets() {
     data.leadFunnelWidgets.forEach(widget => {
         const widgetCard = createWidgetCard({...widget,
-            iconImage: iconImageLookup[widget.id] || "./img/icons/home.svg"
+            iconImage: iconImageLookup[widget.id] || "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/home.svg"
         });
         document.body.querySelector(".addy-widget-card-container").appendChild(widgetCard);
         // Add event listener to the button
