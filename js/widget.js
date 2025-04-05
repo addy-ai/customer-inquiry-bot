@@ -415,7 +415,7 @@ function createSuccessScreen(nextQuestion) {
         .replaceAll("{{title}}", nextQuestion.nextQuestion.title)
         .replaceAll("{{message}}", nextQuestion.nextQuestion.message)
         .replaceAll("{{closeButtonText}}", nextQuestion.nextQuestion.closeButtonText)
-        .replaceAll("{{checkIcon}}", "./img/icons/check_green.svg");
+        .replaceAll("{{checkIcon}}", "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/check_green.svg");
     // Update the close button primary color
     successScreen.querySelector(".addy-interactive-primary-button").style.backgroundColor = data.primaryColor;
     return successScreen;
