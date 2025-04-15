@@ -45,35 +45,23 @@ function initializeWidgets() {
             createAgentView(widget);
         });
     });
+    // Add widget styles to the window.parent.document.body
+    window.parent.document.head.appendChild(document.createElement("style")).textContent = widgetStyles;
 }
 
-function startFullScreenInteractiveMode() {
-    // Get the widgetIframe parent element
-    const widgetIframeParent = window.parent.document.querySelector("#widgetIframe").parentElement;
-    widgetIframeParent.style.height = "100vh";
-    previousWidgetIframeHeight = widgetIframeParent.querySelector("iframe").style.height;
-    widgetIframeParent.querySelector("iframe").style.height = "100%";
-    widgetIframeParent.style.width = "100vw";
-    widgetIframeParent.style.position = "fixed";
-    widgetIframeParent.style.zIndex = "9999999";
-    widgetIframeParent.style.top = "0";
-    widgetIframeParent.style.left = "0";
-    widgetIframeParent.style.backgroundColor = "#FFFFFF";
+function startFullScreenInteractiveMode(agentView) {
+    // Create an overlay, add to window.parent.document.body z-index,
+    // and then append the agent view to the overlay
+    const overlay = document.createElement("div");
+    overlay.setAttribute("class", "addy-agent-view-overlay");
+    window.parent.document.body.appendChild(overlay);
+
+    // Append the agent view to the overlay
+    overlay.appendChild(agentView);
 }
 
 function endFullScreenInteractiveMode() {
-    const widgetIframeParent = window.parent.document.querySelector("#widgetIframe").parentElement;
-    widgetIframeParent.style.height = "unset";
-    widgetIframeParent.querySelector("iframe").style.height = "unset";
-    if (previousWidgetIframeHeight) {
-        widgetIframeParent.querySelector("iframe").style.height = previousWidgetIframeHeight;
-    }
-    widgetIframeParent.style.width = "unset";
-    widgetIframeParent.style.position = "unset";
-    widgetIframeParent.style.zIndex = "unset";
-    widgetIframeParent.style.top = "unset";
-    widgetIframeParent.style.left = "unset";
-    widgetIframeParent.style.backgroundColor = "unset";
+    // I feel like this could be useful one day
 }
 
 function createWidgetCard(widget) {
@@ -95,8 +83,13 @@ function createWidgetCard(widget) {
 
 function closeTheView() {
     // Get agent view
-    const agentView = document.body.querySelector(".addy-agent-view");
+    const agentView = window.parent.document.body.querySelector(".addy-agent-view");
     if (agentView) {
+        // Remove the overlay
+        const overlay = window.parent.document.body.querySelector(".addy-agent-view-overlay");
+        if (overlay) {
+            overlay.remove();
+        }
         agentView.remove();
         endFullScreenInteractiveMode();
     }
@@ -108,9 +101,11 @@ async function createAgentView(widget) {
     let agentView = document.createElement("div");
     agentView.setAttribute("class", "addy-agent-view");
     agentView.innerHTML = `
-        <button class="addy-close-button">
-            <img src="https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/close.svg" />
-        </button>
+        <div class="addy-agent-view-header-container">
+            <button class="addy-close-button">
+                <img src="https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/close.svg" />
+            </button>
+        </div>
     `;
     // Create a header which will have a progress bar and then right below will
     // be a back button to go back to the previous question.
@@ -129,8 +124,12 @@ async function createAgentView(widget) {
             <p class="addy-agent-view-header-progress-text">0%</p>
         </div>
     `;
+    let agentViewContent = document.createElement("div");
+    agentViewContent.setAttribute("class", "addy-agent-view-content");
 
-    agentView.appendChild(header);
+    agentViewContent.appendChild(header);
+
+    agentView.appendChild(agentViewContent);
     // Get close button and create the action to close the agent view
     let closeButton = agentView.querySelector(".addy-close-button");
     closeButton.addEventListener("click", () => {
@@ -140,9 +139,9 @@ async function createAgentView(widget) {
     // Add back button click listener
     let backButton = agentView.querySelector(".addy-back-button");
     backButton.addEventListener("click", handleBackButtonClick);
-    
-    document.body.appendChild(agentView);
-    startFullScreenInteractiveMode();
+
+    // document.body.appendChild(agentView);
+    startFullScreenInteractiveMode(agentView);
 
     // Reset the current question index
     currentQuestionIndex = 0;
@@ -157,18 +156,18 @@ function handleBackButtonClick() {
     if (currentQuestionIndex <= 0) return;
 
     // Get the previous question element using currentQuestionIndex - 1
-    const previousQuestionElement = document.querySelector(`.addy-agent-form-section[data-question-index="${currentQuestionIndex - 1}"]`);
+    const previousQuestionElement = window.parent.document.querySelector(`.addy-agent-form-section[data-question-index="${currentQuestionIndex - 1}"]`);
     console.log("Looking for previous question element at index", currentQuestionIndex - 1);
     
     if (previousQuestionElement) {
-        console.log("Found previous question element", previousQuestionElement);
+        // console.log("Found previous question element", previousQuestionElement);
         // Hide all question elements
-        document.querySelectorAll('.addy-agent-form-section').forEach(el => {
+        window.parent.document.querySelectorAll('.addy-agent-form-section').forEach(el => {
             el.style.display = 'none';
         });
         
         // Show the previous question element
-        previousQuestionElement.style.display = 'block';
+        previousQuestionElement.style.display = 'flex';
 
         // Decrement the current question index before calling handleNextQuestion
         currentQuestionIndex--;
@@ -183,8 +182,8 @@ function handleBackButtonClick() {
         }
         
         // Update progress bar and text
-        const progressBar = document.querySelector(".addy-agent-view-progress-bar-fill");
-        const progressText = document.querySelector(".addy-agent-view-header-progress-text");
+        const progressBar = window.parent.document.querySelector(".addy-agent-view-progress-bar-fill");
+        const progressText = window.parent.document.querySelector(".addy-agent-view-header-progress-text");
         const progress = (currentQuestionIndex / TOTAL_EXPECTED_QUESTIONS) * 100;
         progressBar.style.width = `${progress}%`;
         progressBar.style.backgroundColor = data.primaryColor;
@@ -194,9 +193,9 @@ function handleBackButtonClick() {
         console.log("Current question index", currentQuestionIndex);
         if (currentQuestionIndex === 1) {
             console.log("Hiding back button and progress text");
-            document.querySelector(".addy-back-button").style.display = "none";
+            window.parent.document.querySelector(".addy-back-button").style.display = "none";
             progressText.style.display = "none";
-            document.querySelector(".addy-agent-view-progress-bar").style.display = "none";
+            window.parent.document.querySelector(".addy-agent-view-progress-bar").style.display = "none";
         }
     } else {
         console.log("No previous question element found at index", currentQuestionIndex - 1);
@@ -206,13 +205,13 @@ function handleBackButtonClick() {
 function handleNextQuestion(nextQuestion) {
     if (nextQuestion.type == "endOfFlow") {
         // Remove the current question element
-        document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-form-section").remove();
+        window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-form-section").remove();
         // Get the last ".addy-agent-form-section" element and hide it
-        const lastQuestionElement = document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-form-section:last-child");
+        const lastQuestionElement = window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-form-section:last-child");
         lastQuestionElement.style.display = "none";
         // Create success screen
         const successScreen = createSuccessScreen(nextQuestion);
-        document.body.querySelector(".addy-agent-view").appendChild(successScreen);
+        window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-content").appendChild(successScreen);
         // Close button on click listener
         successScreen.querySelector(".addy-interactive-primary-button").addEventListener("click", () => {
             closeTheView();
@@ -235,16 +234,17 @@ function handleNextQuestion(nextQuestion) {
         // Create new question element if it doesn't exist
         nextQuestionElement = createNextQuestionElement(nextQuestion);
         nextQuestionElement.setAttribute('data-question-index', currentQuestionIndex);
-        document.body.querySelector(".addy-agent-view").appendChild(nextQuestionElement);
+        // "addy-agent-view" is now in the window.parent.document.body
+        window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-content").appendChild(nextQuestionElement);
     }
     
     // Hide all question elements
-    document.querySelectorAll('.addy-agent-form-section').forEach(el => {
+    window.parent.document.querySelectorAll('.addy-agent-form-section').forEach(el => {
         el.style.display = 'none';
     });
     
     // Show the current question element
-    nextQuestionElement.style.display = 'block';
+    nextQuestionElement.style.display = 'flex';
 
     // Adjust the iframe height to fit the content
     const iframe = nextQuestionElement.querySelector(".addy-interactive-iframe");
@@ -254,8 +254,8 @@ function handleNextQuestion(nextQuestion) {
     addNextButtonOnClickListener(nextQuestionElement);
 
     // Update progress bar and text
-    const progressBar = document.querySelector(".addy-agent-view-progress-bar-fill");
-    const progressText = document.querySelector(".addy-agent-view-header-progress-text");
+    const progressBar = window.parent.document.querySelector(".addy-agent-view-progress-bar-fill");
+    const progressText = window.parent.document.querySelector(".addy-agent-view-header-progress-text");
     const progress = (currentQuestionIndex / TOTAL_EXPECTED_QUESTIONS) * 100;
     progressBar.style.width = `${progress}%`;
     progressBar.style.backgroundColor = data.primaryColor;
@@ -263,15 +263,15 @@ function handleNextQuestion(nextQuestion) {
 
     // If the previousQuestionsAndAnswers array is < 2, don't show the back button
     if (previousQuestionsAndAnswers.length < 1) {
-        document.body.querySelector(".addy-agent-view").querySelector(".addy-back-button").style.display = "none";
+        window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-back-button").style.display = "none";
         // Hide the progress text
-        document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-header-progress-text").style.display = "none";
+        window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-header-progress-text").style.display = "none";
         // Hide the progress bar
-        document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-progress-bar").style.display = "none";
+        window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-progress-bar").style.display = "none";
     } else {
-        document.body.querySelector(".addy-agent-view").querySelector(".addy-back-button").style.display = "block";
-        document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-header-progress-text").style.display = "block";
-        document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-progress-bar").style.display = "block";
+        window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-back-button").style.display = "block";
+        window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-header-progress-text").style.display = "block";
+        window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-progress-bar").style.display = "block";
     }
     
     window.isGoingBack = false;
@@ -290,9 +290,11 @@ function addNextButtonOnClickListener(nextQuestionElement) {
 }
 
 function updateIframeHeightToItsContent(iframe, interactiveData) {
-    if (!iframe) return;
+    if (!iframe) {
+        return;
+    };
     iframe.addEventListener('load', async () => {
-        const contentHeight = iframe.contentWindow.document.body.scrollHeight + (interactiveData?.type == "textInput" ? 20 : 5);
+        const contentHeight = iframe.contentWindow.document.body.scrollHeight + (interactiveData?.type == "textInput" ? 20 : 20);
         iframe.style.height = `${contentHeight}px`;
     });
 }
@@ -316,6 +318,8 @@ function createNextQuestionElement(nextQuestion) {
     // Create the iframe to load the answer capture ui
     let iframe = document.createElement("iframe");
     iframe.setAttribute("class", "addy-interactive-iframe");
+    // set border to none
+    iframe.style.border = "none";
     iframe.setAttribute("srcdoc", nextQuestion.uiComponent);
     nextQuestionElement.appendChild(iframe);
 
@@ -334,8 +338,8 @@ function createNextQuestionElement(nextQuestion) {
 }
 
 function listenForInteractiveResponse() {
-    // Window listen for postMessage
-    window.addEventListener("message", (event) => {
+    // Add the listener to the parent window
+    window.parent.addEventListener("message", (event) => {
         if (event.data.answerSelected) {
             // console.log("Answer selected", event.data.answerSelected);
             const question = event.data.answerSelected.question;
@@ -359,6 +363,7 @@ function listenForInteractiveResponse() {
             // For selector type, get next question immediately
             // For other types, wait for the next button click
             if (event.data.answerSelected.type == "selector") {
+                // console.log("Selector type, getting next question immediately");
                 getNextQuestion();
             }
         }
@@ -450,16 +455,197 @@ const nextQuestionHTMLTemplate = `
 `
 
 const successScreenHTML = `
-    <div class="addy-agent-form-section-header">
-        <div class="addy-agent-form-section-header-avatar-container" style="display: flex; gap: 15px; align-items: start;">
+    <div class="addy-agent-form-section-header" style="display: flex; flex-direction: column; align-items: center;">
+        <div class="addy-agent-form-section-header-avatar-container" style="display: flex; gap: 15px; align-items: start; flex-direction: column; align-items: center;">
             <img width="30" height="30" src="{{checkIcon}}" />
-            <h2 class="addy-agent-form-section-question" style="text-align: left; margin-top: 0px;">{{title}}</h2>
+            <h2 class="addy-agent-form-section-question" style="text-align: center; margin-top: 0px;">{{title}}</h2>
         </div>
 
-        <p style="margin-bottom: 30px; margin-top: 0px; text-align: center;">{{message}}</p>
+        <p style="margin-bottom: 30px; margin-top: 0px; text-align: center; max-width: 80%;">{{message}}</p>
 
-        <button class="addy-interactive-primary-button">
+        <button class="addy-interactive-primary-button" style="max-width: 80%;">
             {{closeButtonText}}
         </button>
     </div>
+`
+
+const widgetStyles = `
+    .addy-agent-view-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(5px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .addy-agent-view {
+        width: 90%;
+        height: 90%;
+        max-width: 600px;
+        max-height: 800px;
+        background-color: #FFFFFF;
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .addy-close-button {
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: 20px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .addy-close-button:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+        transition: 0.3s all ease;
+    }
+
+    .addy-agent-view-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+    }
+
+    .addy-agent-view-header-container {
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+    }
+
+    .addy-back-button {
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        display: none;
+    }
+
+    .addy-back-button:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+        transition: 0.3s all ease;
+    }
+    .addy-agent-view-header-back-button-container {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .addy-agent-view-header-progress-text {
+        font-size: 14px;
+        color: #111;
+        display: none;
+        font-family: "Inter", sans-serif;
+    }
+
+    .addy-agent-view-header {
+        width: 100%;
+        max-width: 800px;
+    }
+
+    .addy-agent-view-progress-bar {
+        width: 100%;
+        height: 5px;
+        background-color: rgb(242, 242, 242);
+        border-radius: 4px;
+        margin-bottom: 15px;
+        overflow: hidden;
+        position: relative;
+        /* box-shadow: inset 0 1px 2px rgba(0,0,0,0.1); */
+        display: block;
+        display: none;
+    }
+
+    .addy-agent-view-progress-bar-fill {
+        width: 0%;
+        height: 100%;
+        transition: width 0.3s ease-in-out;
+        position: absolute;
+        left: 0;
+        top: 0;
+        border-radius: 4px;
+        display: block;
+    }
+
+    .addy-agent-view-header-progress-bar {
+        width: 100%;
+        height: 4px;
+        background-color: #f0f0f0;
+        border-radius: 2px;
+        margin-bottom: 15px;
+        overflow: hidden;
+    }
+
+    .addy-agent-view-header-progress-bar-fill {
+        width: 0%;
+        height: 100%;
+        transition: width 0.3s ease-in-out;
+    }
+
+    .addy-agent-form-section {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .addy-agent-form-section-question {
+        max-width: 500px;
+        font-family: "Inter", sans-serif;
+        color: #111;
+        font-size: 26px;
+        line-height: 36px;
+        text-align: center;
+        letter-spacing: 0.025em;
+    }
+
+    .addy-interactive-primary-button {
+        width: 100%;
+        padding: 13px 15px;
+        border-radius: 99999px;
+        color: white;
+        cursor: pointer;
+        border: none;
+        font-size: 16px;
+        border: 2px solid transparent;
+    }
+
+    .addy-interactive-primary-button:hover {
+        /* Make slightly bigger */
+        transform: scale(1.02);
+        transition: 0.3s all ease;
+    }
+
+    .addy-interactive-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .addy-interactive-iframe {
+        width: 100%;
+    }
 `

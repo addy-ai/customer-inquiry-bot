@@ -2,14 +2,14 @@ const scriptTag = document.currentScript;
 window.chatbotScriptLoaded = false;
 window.isChatbotFirstClick = true;
 
-console.log("Bubble script loaded");
+// console.log("Bubble script loaded");
 
 // 0. Init the steps
 window.addEventListener("load", async function () {
     try {
         // 1. Get info for bubble and chatbox
         let data = await getChatBotData();
-        console.log("data fetched", data);
+        // console.log("data fetched", data);
         if (!data) {
             // Some error occured
             console.error("Error: No data found");
@@ -34,7 +34,7 @@ window.addEventListener("load", async function () {
             // There are widgets to show
             // console.log("widgets", data.leadFunnelWidgets);
             createWidgetView(data);
-            console.log("Widget view created");
+            // console.log("Widget view created");
         }
     } catch (error) {
         console.error("Error:", error);
@@ -101,26 +101,43 @@ function createWidgetView(data) {
     widgetIframe.style.width = "100%";
     widgetIframe.style.paddingTop = "30px";
     widgetIframe.style.paddingBottom = "30px";
-    console.log("Widget iframe created", widgetIframe);
+    // console.log("Widget iframe created", widgetIframe);
   
     widgetIframe.style.border = "none";
-    widgetIframe.setAttribute("srcdoc", widgetIframeHTML);
+
+    const styleSheetLink = scriptTag.getAttribute("env") &&
+        scriptTag.getAttribute("env").includes("local") ?
+        "css/style.css" :
+        "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/css/style.min.css";
+
+    const widgetJSLink = scriptTag.getAttribute("env") &&
+        scriptTag.getAttribute("env").includes("local") ?
+        "js/widget.js" :
+        "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/js/widget.min.js";
+
+    let htmlCode = widgetIframeHTML;
+    htmlCode = htmlCode.replace("{{styleSheetLink}}", styleSheetLink);
+    htmlCode = htmlCode.replace("{{widgetJSLink}}", widgetJSLink);
+    
+    widgetIframe.setAttribute("srcdoc", htmlCode);
+    // if env is development, use the local css file
+    
     window.addyAIData = data;
-    console.log("Widget iframe set", widgetIframe);
+    // console.log("Widget iframe set", widgetIframe);
     widgetView.append(widgetIframe);
-    console.log("Widget view appended", widgetView);
+    // console.log("Widget view appended", widgetView);
     // Get the container where addy-widget-id is set to the scriptTag.id
     const widgetContainer = document.querySelector(`[addy-widget-id="${scriptTag.id}"]`);
-    console.log("Widget container found", widgetContainer);
+    // console.log("Widget container found", widgetContainer);
     if (!widgetContainer) {
         console.error("Widget container not found");
         return;
     }
     widgetContainer.append(widgetView);
-    console.log("Widget container appended", widgetContainer);
+    // console.log("Widget container appended", widgetContainer);
     // After widget is loaded, set the iframe height to fit the content
     widgetIframe.onload = () => {
-        console.log("Widget iframe loaded");
+        // console.log("Widget iframe loaded");
         // get the actual scroll height of the contents of the iframe
         updateIframeHeightToItsContent(widgetIframe);
     }   
@@ -303,7 +320,7 @@ const widgetIframeHTML = `<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <title>Addy AI Widget</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/css/style.min.css">
+    <link rel="stylesheet" href="{{styleSheetLink}}">
 </head> 
 
 <body>
@@ -315,7 +332,7 @@ const widgetIframeHTML = `<!DOCTYPE html>
         </div>
     </div>
     
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/js/widget.min.js"></script>
+    <script type="text/javascript" src="{{widgetJSLink}}"></script>
 </body>
 </html>
 `
