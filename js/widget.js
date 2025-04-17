@@ -46,7 +46,11 @@ function initializeWidgets() {
         });
     });
     // Add widget styles to the window.parent.document.body
-    window.parent.document.head.appendChild(document.createElement("style")).textContent = widgetStyles;
+    let widgetStylesContent = widgetStyles;
+    // Replace all ; with ' !important;` To overide parent styles
+    // !important is not allowed inside @keyframes, so we need to remove it
+    console.log("Widget styles content", widgetStylesContent);
+    window.parent.document.head.appendChild(document.createElement("style")).textContent = widgetStylesContent;
 }
 
 function startFullScreenInteractiveMode(agentView) {
@@ -120,7 +124,10 @@ async function createAgentView(widget) {
             <button class="addy-back-button">
                 <img width="22" height="22" src="https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/back.svg" />
             </button>
-
+            <!-- Three dots loader -->
+            <div class="addy-three-dots-loader">
+                <div class="dot-pulse"></div>
+            </div>
             <p class="addy-agent-view-header-progress-text">0%</p>
         </div>
     `;
@@ -150,6 +157,8 @@ async function createAgentView(widget) {
     // Create the content
     getNextQuestion();
 }
+
+
 
 function handleBackButtonClick() {
     console.log("Handling back button click, current question index", currentQuestionIndex);
@@ -208,7 +217,9 @@ function handleNextQuestion(nextQuestion) {
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-form-section").remove();
         // Get the last ".addy-agent-form-section" element and hide it
         const lastQuestionElement = window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-form-section:last-child");
-        lastQuestionElement.style.display = "none";
+        if (lastQuestionElement) {
+            lastQuestionElement.style.display = "none";
+        }
         // Create success screen
         const successScreen = createSuccessScreen(nextQuestion);
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-content").appendChild(successScreen);
@@ -370,7 +381,13 @@ function listenForInteractiveResponse() {
     });
 }
 
+async function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function getNextQuestion() {
+    // Have a little delay for better user experience
+    await sleep(300);
     // If we have a previously answered question at the current index, use that instead of making a new API call
     if (interactiveSectionState[currentQuestionIndex]) {
         handleNextQuestion(interactiveSectionState[currentQuestionIndex]);
@@ -379,10 +396,42 @@ async function getNextQuestion() {
 
     // If it's selector, then get next question instantly without waiting to click on next button
     // console.log("Getting next question");
+    showLoader();
     const nextQuestionResponse = await makeAPICallForNextQuestion();
     // console.log("Next question response", nextQuestionResponse);
     if (nextQuestionResponse?.nextQuestion) {
+        hideLoader();
         handleNextQuestion(nextQuestionResponse);
+    }
+}
+
+function showLoader() {
+    // Show the three dots loader
+    const threeDotsLoader = window.parent.document.body.querySelector(".addy-three-dots-loader");
+    if (threeDotsLoader) {
+        threeDotsLoader.style.display = "flex";
+    }
+    // Hide agent form section
+    const agentFormSections = window.parent.document.body.querySelectorAll(".addy-agent-form-section");
+    if (agentFormSections) {
+        agentFormSections.forEach(section => {
+            section.style.visibility = "hidden";
+        });
+    }
+}
+
+function hideLoader() {
+    // Hide the three dots loader
+    const threeDotsLoader = window.parent.document.body.querySelector(".addy-three-dots-loader");
+    if (threeDotsLoader) {
+        threeDotsLoader.style.display = "none";
+    }
+    // Show agent form section
+    const agentFormSections = window.parent.document.body.querySelectorAll(".addy-agent-form-section");
+    if (agentFormSections) {
+        agentFormSections.forEach(section => {
+            section.style.visibility = "visible";
+        });
     }
 }
 
@@ -485,7 +534,7 @@ const widgetStyles = `
 
     .addy-agent-view {
         width: 90%;
-        height: 90%;
+        height: 87%;
         max-width: 600px;
         max-height: 800px;
         background-color: #FFFFFF;
@@ -499,21 +548,21 @@ const widgetStyles = `
     }
 
     .addy-close-button {
-        background-color: transparent;
-        border: none;
-        cursor: pointer;
-        font-size: 20px;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        background-color: transparent !important;
+        border: none !important;
+        cursor: pointer !important;
+        font-size: 20px !important;
+        width: 30px !important;
+        height: 30px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
     .addy-close-button:hover {
-        background-color: rgba(0, 0, 0, 0.1);
-        transition: 0.3s all ease;
+        background-color: rgba(0, 0, 0, 0.1) !important;
+        transition: 0.3s all ease !important;
     }
 
     .addy-agent-view-content {
@@ -531,28 +580,28 @@ const widgetStyles = `
     }
 
     .addy-back-button {
-        background-color: transparent;
-        border: none;
-        cursor: pointer;
-        font-size: 20px;
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        display: none;
+        background-color: transparent !important;
+        border: none !important;
+        cursor: pointer !important;
+        font-size: 20px !important;
+        width: 50px !important;
+        height: 50px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        display: none !important;
     }
 
     .addy-back-button:hover {
-        background-color: rgba(0, 0, 0, 0.1);
-        transition: 0.3s all ease;
+        background-color: rgba(0, 0, 0, 0.1) !important;
+        transition: 0.3s all ease !important;
     }
     .addy-agent-view-header-back-button-container {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
     }
 
     .addy-agent-view-header-progress-text {
@@ -614,12 +663,12 @@ const widgetStyles = `
 
     .addy-agent-form-section-question {
         max-width: 500px;
-        font-family: "Inter", sans-serif;
-        color: #111;
-        font-size: 26px;
-        line-height: 36px;
-        text-align: center;
-        letter-spacing: 0.025em;
+        font-family: "Inter", sans-serif !important;
+        color: #111 !important;
+        font-size: 26px !important;
+        line-height: 36px !important;
+        text-align: center !important;
+        letter-spacing: 0.025em !important;
     }
 
     .addy-interactive-primary-button {
@@ -647,5 +696,86 @@ const widgetStyles = `
 
     .addy-interactive-iframe {
         width: 100%;
+    }
+
+    .addy-three-dots-loader {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        display: flex;
+    }
+
+
+    /**
+     * ==============================================
+     * Dot Pulse
+     * ==============================================
+     */
+    .dot-pulse {
+    position: relative;
+    left: -9999px;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: ${data.primaryColor};
+    color: ${data.primaryColor};
+    box-shadow: 9999px 0 0 -5px;
+    animation: dot-pulse 1.5s infinite linear;
+    animation-delay: 0.25s;
+    }
+    .dot-pulse::before, .dot-pulse::after {
+    content: "";
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: ${data.primaryColor};
+    color: ${data.primaryColor};
+    }
+    .dot-pulse::before {
+    box-shadow: 9984px 0 0 -5px;
+    animation: dot-pulse-before 1.5s infinite linear;
+    animation-delay: 0s;
+    }
+    .dot-pulse::after {
+    box-shadow: 10014px 0 0 -5px;
+    animation: dot-pulse-after 1.5s infinite linear;
+    animation-delay: 0.5s;
+    }
+
+    @keyframes dot-pulse-before {
+    0% {
+        box-shadow: 9984px 0 0 -5px;
+    }
+    30% {
+        box-shadow: 9984px 0 0 2px;
+    }
+    60%, 100% {
+        box-shadow: 9984px 0 0 -5px;
+    }
+    }
+    @keyframes dot-pulse {
+    0% {
+        box-shadow: 9999px 0 0 -5px;
+    }
+    30% {
+        box-shadow: 9999px 0 0 2px;
+    }
+    60%, 100% {
+        box-shadow: 9999px 0 0 -5px;
+    }
+    }
+    @keyframes dot-pulse-after {
+    0% {
+        box-shadow: 10014px 0 0 -5px;
+    }
+    30% {
+        box-shadow: 10014px 0 0 2px;
+    }
+    60%, 100% {
+        box-shadow: 10014px 0 0 -5px;
+    }
     }
 `

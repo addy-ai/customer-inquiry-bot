@@ -19,18 +19,18 @@ window.addEventListener("load", async function () {
 
         // 2. Create Chatbox and append to body
         let chatbox = createChatbox(data);
-        console.log("Chatbox created");
+        // console.log("Chatbox created");
 
         // 3. Create Bubble Components and append to body, to toggle chatbox
         createBubbleComponents(chatbox, data);
-        console.log("Bubble components created");
+        // console.log("Bubble components created");
 
         chatbotScriptLoaded = true;
         // console.log("Addy AI Chatbot successfully loaded.");
 
         // 4. Create widgets
         if (data?.leadFunnelWidgets?.length) {
-            console.log("Widgets found, creating widget view");
+            // console.log("Widgets found, creating widget view");
             // There are widgets to show
             // console.log("widgets", data.leadFunnelWidgets);
             createWidgetView(data);
