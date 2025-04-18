@@ -559,6 +559,7 @@ const widgetStyles = `
         align-items: center !important;
         justify-content: center !important;
         padding: 0px !important;
+        box-shadow: none !important;
     }
 
     .addy-close-button:hover {
@@ -592,6 +593,7 @@ const widgetStyles = `
         justify-content: center !important;
         padding: 0px !important;
         display: none;
+        box-shadow: none !important;
     }
 
     .addy-back-button:hover {
