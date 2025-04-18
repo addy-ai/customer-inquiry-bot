@@ -202,7 +202,7 @@ function handleBackButtonClick() {
         console.log("Current question index", currentQuestionIndex);
         if (currentQuestionIndex === 1) {
             console.log("Hiding back button and progress text");
-            window.parent.document.querySelector(".addy-back-button").style.display = "none !important";
+            window.parent.document.querySelector(".addy-back-button").style.display = "none";
             progressText.style.display = "none";
             window.parent.document.querySelector(".addy-agent-view-progress-bar").style.display = "none";
         }
@@ -274,13 +274,13 @@ function handleNextQuestion(nextQuestion) {
 
     // If the previousQuestionsAndAnswers array is < 2, don't show the back button
     if (previousQuestionsAndAnswers.length < 1) {
-        window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-back-button").style.display = "none !important";
+        window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-back-button").style.display = "none";
         // Hide the progress text
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-header-progress-text").style.display = "none";
         // Hide the progress bar
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-progress-bar").style.display = "none";
     } else {
-        window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-back-button").style.display = "block !important";
+        window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-back-button").style.display = "block";
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-header-progress-text").style.display = "block";
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-progress-bar").style.display = "block";
     }
@@ -590,8 +590,8 @@ const widgetStyles = `
         border-radius: 50% !important;
         align-items: center !important;
         justify-content: center !important;
-        display: none !important;
         padding: 0px !important;
+        display: none;
     }
 
     .addy-back-button:hover {
