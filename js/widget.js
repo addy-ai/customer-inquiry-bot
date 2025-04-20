@@ -222,14 +222,14 @@ function handleNextQuestion(nextQuestion) {
         }
         // Create success screen
         const successScreen = createSuccessScreen(nextQuestion);
-        window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-content").appendChild(successScreen);
         // Close button on click listener
         successScreen.querySelector(".addy-interactive-primary-button").addEventListener("click", () => {
             closeTheView();
         });
+        
+        window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-content").appendChild(successScreen);
         return;
-    }
-    
+    }    
     // Store the question state
     interactiveSectionState[currentQuestionIndex] = nextQuestion;
     
@@ -262,7 +262,7 @@ function handleNextQuestion(nextQuestion) {
     updateIframeHeightToItsContent(iframe, nextQuestion);
 
     // Add the next button on click listener
-    addNextButtonOnClickListener(nextQuestionElement);
+    addNextButtonOnClickListener(nextQuestionElement, nextQuestion);
 
     // Update progress bar and text
     const progressBar = window.parent.document.querySelector(".addy-agent-view-progress-bar-fill");
@@ -288,16 +288,36 @@ function handleNextQuestion(nextQuestion) {
     window.isGoingBack = false;
 }
 
-function addNextButtonOnClickListener(nextQuestionElement) {
+function addNextButtonOnClickListener(nextQuestionElement, nextQuestion) {
     const nextButton = nextQuestionElement.querySelector(".addy-interactive-primary-button");
+
     if (nextButton) {
         // console.log("Adding next button on click listener");
+        if (nextQuestion.type == "rateQuote") {
+            // Change next button text to "Continue full application"
+            nextButton.innerHTML = nextQuestion.nextQuestion.buttonText;
+            // Get the simple paragraph and insert right before the next button
+            const simpleParagraph = createSimpleParagraph(nextQuestion.nextQuestion.continuePrompt);
+            nextQuestionElement.insertBefore(simpleParagraph, nextButton);
+        }
         nextButton.addEventListener("click", () => {
             // Remove the old click listener to prevent multiple bindings
             nextButton.removeEventListener("click", () => getNextQuestion());
-            getNextQuestion();
+            if (nextQuestion.type == "rateQuote") {
+                // Redirect to the redirectUrl in new tab
+                window.open(nextQuestion.nextQuestion.redirectUrl, "_blank");
+            } else {
+                getNextQuestion();
+            }
         });
     }
+}
+
+function createSimpleParagraph(text) {
+    const paragraph = document.createElement("p");
+    paragraph.innerHTML = text;
+    paragraph.setAttribute("class", "addy-simple-paragraph");
+    return paragraph;
 }
 
 function updateIframeHeightToItsContent(iframe, interactiveData) {
@@ -305,7 +325,12 @@ function updateIframeHeightToItsContent(iframe, interactiveData) {
         return;
     };
     iframe.addEventListener('load', async () => {
-        const contentHeight = iframe.contentWindow.document.body.scrollHeight + (interactiveData?.type == "textInput" ? 20 : 20);
+        let additionalHeight = interactiveData?.type == "textInput" ? 20 : 20;
+        if (interactiveData?.type == "rateQuote") {
+            additionalHeight = 5;
+        }
+        
+        const contentHeight = iframe.contentWindow.document.body.scrollHeight + additionalHeight;
         iframe.style.height = `${contentHeight}px`;
     });
 }
@@ -318,7 +343,10 @@ function createNextQuestionElement(nextQuestion) {
     if (!questionData) {
         throw new Error("No question data found");
     }
-    questionData = JSON.parse(questionData);
+    // If questionData is a string, parse it
+    if (typeof questionData == "string") {
+        questionData = JSON.parse(questionData);
+    }
     // Question data found, create 
     // This is interactive mode
     let innerHTML = nextQuestionHTMLTemplate
@@ -519,6 +547,9 @@ const successScreenHTML = `
 `
 
 const widgetStyles = `
+    label {
+        font-family: "Inter", sans-serif !important;
+    }
     .addy-agent-view-overlay {
         position: fixed;
         top: 0;
@@ -530,6 +561,7 @@ const widgetStyles = `
         display: flex;
         justify-content: center;
         align-items: center;
+        z-index: 99999;
     }
 
     .addy-agent-view {
@@ -746,6 +778,13 @@ const widgetStyles = `
     box-shadow: 10014px 0 0 -5px;
     animation: dot-pulse-after 1.5s infinite linear;
     animation-delay: 0.5s;
+    }
+    .addy-simple-paragraph {
+        font-family: "Inter", sans-serif !important;
+        color: #111 !important;
+        font-size: 16px !important;
+        line-height: 14px !important;
+        margin: 10px !important;
     }
 
     @keyframes dot-pulse-before {
