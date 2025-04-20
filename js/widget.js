@@ -807,7 +807,7 @@ const widgetStyles = `
         font-family: "Inter", sans-serif !important;
         color: #111 !important;
         font-size: 16px !important;
-        line-height: 14px !important;
+        line-height: 18px !important;
         margin: 10px !important;
     }
 
