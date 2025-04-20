@@ -10,7 +10,7 @@ let currentQuestionIndex = 0;
 let lastKnownQuestionUIState = {};
 let previousWidgetIframeHeight = null;
 
-const TOTAL_EXPECTED_QUESTIONS = 15;
+let TOTAL_EXPECTED_QUESTIONS = 15;
 
 let backendAPI = data.env == "development" ? "https://backend-dev-111911035666.us-central1.run.app" : "https://backend-prod-zquodzeuva-uc.a.run.app"
 
@@ -49,7 +49,7 @@ function initializeWidgets() {
     let widgetStylesContent = widgetStyles;
     // Replace all ; with ' !important;` To overide parent styles
     // !important is not allowed inside @keyframes, so we need to remove it
-    console.log("Widget styles content", widgetStylesContent);
+    // console.log("Widget styles content", widgetStylesContent);
     window.parent.document.head.appendChild(document.createElement("style")).textContent = widgetStylesContent;
 }
 
@@ -89,6 +89,19 @@ function closeTheView() {
     // Get agent view
     const agentView = window.parent.document.body.querySelector(".addy-agent-view");
     if (agentView) {
+        // If current question is rateQuote, ask the user if they really want to exit, yes or no
+        const currentQuestion = interactiveSectionState[currentQuestionIndex];
+        if (currentQuestion && currentQuestion.type == "rateQuote") {
+            const confirmExit = confirm("Are you sure you want to exit the quote?");
+            if (!confirmExit) {
+                return;
+            } else {
+                // User wants to exit, reset the whole question flow
+                previousQuestionsAndAnswers = [];
+                currentQuestionIndex = 0;
+                interactiveSectionState = [];
+            }
+        }
         // Remove the overlay
         const overlay = window.parent.document.body.querySelector(".addy-agent-view-overlay");
         if (overlay) {
@@ -212,6 +225,10 @@ function handleBackButtonClick() {
 }
 
 function handleNextQuestion(nextQuestion) {
+    // Parse nextQuestion quesiton data as JSON if it's a string
+    if (nextQuestion?.nextQuestion && typeof nextQuestion.nextQuestion == "string") {
+        nextQuestion.nextQuestion = JSON.parse(nextQuestion.nextQuestion);
+    }
     if (nextQuestion.type == "endOfFlow") {
         // Remove the current question element
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-form-section").remove();
@@ -240,7 +257,7 @@ function handleNextQuestion(nextQuestion) {
     
     // Check if we already have a question element at this index
     let nextQuestionElement = document.querySelector(`.addy-agent-form-section[data-question-index="${currentQuestionIndex}"]`);
-    
+
     if (!nextQuestionElement) {
         // Create new question element if it doesn't exist
         nextQuestionElement = createNextQuestionElement(nextQuestion);
@@ -263,6 +280,13 @@ function handleNextQuestion(nextQuestion) {
 
     // Add the next button on click listener
     addNextButtonOnClickListener(nextQuestionElement, nextQuestion);
+
+    // Update the TOTAL_EXPECTED_QUESTIONS
+    const numberOfQuestionsLeft = nextQuestion.nextQuestion.numberOfQuestionsLeft;
+    if (numberOfQuestionsLeft) {
+        // Total questions = numberOfQuestionsLeft + currentQuestionIndex + 1 (for the current question)
+        TOTAL_EXPECTED_QUESTIONS = numberOfQuestionsLeft + currentQuestionIndex;
+    }
 
     // Update progress bar and text
     const progressBar = window.parent.document.querySelector(".addy-agent-view-progress-bar-fill");
