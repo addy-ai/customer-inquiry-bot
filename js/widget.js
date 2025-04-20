@@ -91,7 +91,7 @@ function closeTheView() {
     if (agentView) {
         // If current question is rateQuote, ask the user if they really want to exit, yes or no
         const currentQuestion = interactiveSectionState[currentQuestionIndex];
-        if (currentQuestion.type == "rateQuote") {
+        if (currentQuestion && currentQuestion.type == "rateQuote") {
             const confirmExit = confirm("Are you sure you want to exit the quote?");
             if (!confirmExit) {
                 return;
