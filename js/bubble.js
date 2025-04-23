@@ -27,15 +27,6 @@ window.addEventListener("load", async function () {
 
         chatbotScriptLoaded = true;
         // console.log("Addy AI Chatbot successfully loaded.");
-
-        // 4. Create widgets
-        if (data?.leadFunnelWidgets?.length) {
-            // console.log("Widgets found, creating widget view");
-            // There are widgets to show
-            // console.log("widgets", data.leadFunnelWidgets);
-            createWidgetView(data);
-            // console.log("Widget view created");
-        }
     } catch (error) {
         console.error("Error:", error);
     }
