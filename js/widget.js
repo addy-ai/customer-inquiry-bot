@@ -1,7 +1,8 @@
+const scriptTag = document.currentScript;
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 // Get the data from the parent
-const data = window?.parent?.addyAIData;
+let data = {};
 let interactiveMode = false;
 let widgetId = null;
 let previousQuestionsAndAnswers = [];
@@ -12,17 +13,33 @@ let previousWidgetIframeHeight = null;
 
 let TOTAL_EXPECTED_QUESTIONS = 15;
 
-let backendAPI = data.env == "development" ? "https://backend-dev-111911035666.us-central1.run.app" : "https://backend-prod-zquodzeuva-uc.a.run.app"
-
-if (data.env == "test-local") {
-    backendAPI = "http://localhost:8080";
-}
-
-data.primaryColor = data?.leadFunnelWidgetsConfig?.primaryColor ||
-    data?.primaryColor || "#745DDE";
+let backendAPI;
 
 window.addEventListener("load", async function () {
-    initializeWidgets();
+    data = await getChatBotData();
+    if (!data) {
+        console.error("Error: No data found");
+        return;
+    };
+    console.log("Data", data);
+    let env = scriptTag.getAttribute("env") || "development";
+    // Set the data object
+    data.env = env;
+    data.primaryColor = data?.leadFunnelWidgetsConfig?.primaryColor || data?.primaryColor || "#745DDE";
+    
+    // Set the CSS variable for primary color
+    document.documentElement.style.setProperty('--primary-color', data.primaryColor);
+    
+    backendAPI = data.env == "development" ? "https://backend-dev-111911035666.us-central1.run.app" : "https://backend-prod-zquodzeuva-uc.a.run.app"
+
+    if (data.env == "test-local") {
+        backendAPI = "http://localhost:8080";
+    }
+
+    // Get the widget ids to create from the scriptTag and the widget ids in the data
+    const widgetIdsToRender = scriptTag.getAttribute("widgets")?.split(",") || [];
+    const agentPublicId = scriptTag.id;
+    initializeWidgets(widgetIdsToRender, agentPublicId);
     listenForInteractiveResponse();
 });
 
@@ -32,12 +49,86 @@ const iconImageLookup = {
     "rates": "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/chart.svg",
 }
 
-function initializeWidgets() {
+async function getChatBotData() {
+    let env = scriptTag?.getAttribute("env") || "development";
+    let backend = url = window.location.host === ''
+        ? "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer/bot-info-public"
+        : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer/bot-info-public"
+    if (env == "development") {
+        backend = "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer/bot-info-public";
+    }
+    if (env == "test") {
+        backend = "http://127.0.0.1:5003/addy-ai-dev/us-central1/businessInference/infer/bot-info-public";
+    }
+    if (env == "test-local") {
+        backend = "http://localhost:8080/embeddingsInference/infer/bot-info-public";
+    }
+    // backend =
+    //   "http://127.0.0.1:5003/addy-ai-dev/us-central1/businessInference/infer/bot-info-public";
+    const publicId = scriptTag.id;
+    const host = window.location.host;
+    const data = await fetch(`${backend}/?publicId=${publicId}&host=${host}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    })
+    .then((response) => response.json())
+    .then(data => { 
+        if (!data.success) throw new Error("Error: No data found");
+        const dataWithWidgets = {
+            ...data?.data?.config,
+            leadFunnelWidgets: data?.data?.leadFunnelWidgets,
+            leadFunnelWidgetsConfig: data?.data?.leadFunnelWidgetsConfig,
+        }
+        return dataWithWidgets;
+    })
+    .catch((error) => {
+        console.error("Error", error);
+        return undefined;
+    });
+    
+    if (!data) return undefined;
+    data.primaryColor ||= "#745DDE";
+    data.primaryColorName ||= "Purple";
+    data.publicId = scriptTag.id;
+    data.host = window.location.host;
+    data.env = env;
+    return data;
+}
+
+function initializeWidgets(widgetIdsToRender, agentPublicId) {
+    const styleSheetLink = scriptTag.getAttribute("env") &&
+        scriptTag.getAttribute("env").includes("local") ?
+        "css/style.css" :
+        "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/css/style.min.css";
+    // Insert the style sheet link to this window.parent.document.head if not already present
+    // log window.parent.document.head
+    console.log("Window parent document head", window.parent.document.head);
+    // Append the style sheet link to the window.parent.document.head if not already present
+    if (!window.parent.document.head.querySelector(`link[href="${styleSheetLink}"]`)) {
+        const linkElement = document.createElement("link");
+        linkElement.setAttribute("rel", "stylesheet");
+        linkElement.setAttribute("href", styleSheetLink);
+        window.parent.document.head.appendChild(linkElement);
+    }
+    // Only render the widgets that are in the widgetIdsToRender array
     data.leadFunnelWidgets.forEach(widget => {
+        if (!widgetIdsToRender.includes(widget.id)) {
+            return;
+        }
+        console.log("Widget id to render", widget.id);
         const widgetCard = createWidgetCard({...widget,
             iconImage: iconImageLookup[widget.id] || "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/home.svg"
         });
-        document.body.querySelector(".addy-widget-card-container").appendChild(widgetCard);
+        // Find all elements where addy-widget-id = agentPublicId  && widgets == scriptTag.widgets
+        const widgetCardContainers = document.body.querySelectorAll(`[addy-widget-id="${agentPublicId}"][widgets="${scriptTag.getAttribute("widgets")}"]`);
+        console.log("Widget card containers", widgetCardContainers);
+        widgetCardContainers.forEach(container => {
+            container.appendChild(widgetCard);
+            // Update the style to be horizontal flex, justify content center, align items center
+            container.setAttribute("class", "addy-widget-card-container");
+        });
         // Add event listener to the button
         widgetCard.querySelector("button").addEventListener("click", () => {
             interactiveMode = true;
@@ -45,12 +136,6 @@ function initializeWidgets() {
             createAgentView(widget);
         });
     });
-    // Add widget styles to the window.parent.document.body
-    let widgetStylesContent = widgetStyles;
-    // Replace all ; with ' !important;` To overide parent styles
-    // !important is not allowed inside @keyframes, so we need to remove it
-    // console.log("Widget styles content", widgetStylesContent);
-    window.parent.document.head.appendChild(document.createElement("style")).textContent = widgetStylesContent;
 }
 
 function startFullScreenInteractiveMode(agentView) {
@@ -284,7 +369,11 @@ function handleNextQuestion(nextQuestion) {
     addNextButtonOnClickListener(nextQuestionElement, nextQuestion);
 
     // Update the TOTAL_EXPECTED_QUESTIONS
-    const numberOfQuestionsLeft = nextQuestion.nextQuestion.numberOfQuestionsLeft;
+    let numberOfQuestionsLeft = nextQuestion.nextQuestion.numberOfQuestionsLeft;
+    if (nextQuestion.type == "endOfFlow") {
+        numberOfQuestionsLeft += 1;
+    }
+    
     if (numberOfQuestionsLeft) {
         // Total questions = numberOfQuestionsLeft + currentQuestionIndex + 1 (for the current question)
         TOTAL_EXPECTED_QUESTIONS = numberOfQuestionsLeft + currentQuestionIndex;
@@ -570,280 +659,4 @@ const successScreenHTML = `
             {{closeButtonText}}
         </button>
     </div>
-`
-
-const widgetStyles = `
-    label {
-        font-family: "Inter", sans-serif !important;
-    }
-    .addy-agent-view-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background-color: rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(5px);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 99999;
-    }
-
-    .addy-agent-view {
-        width: 90%;
-        height: 87%;
-        max-width: 600px;
-        max-height: 800px;
-        background-color: #FFFFFF;
-        border-radius: 20px;
-        padding: 25px;
-        box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .addy-close-button {
-        background-color: transparent !important;
-        border: none !important;
-        cursor: pointer !important;
-        font-size: 20px !important;
-        width: 30px !important;
-        height: 30px !important;
-        border-radius: 50% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 0px !important;
-        box-shadow: none !important;
-    }
-
-    .addy-close-button:hover {
-        background-color: rgba(0, 0, 0, 0.1) !important;
-        transition: 0.3s all ease !important;
-    }
-
-    .addy-agent-view-content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        flex: 1;
-    }
-
-    .addy-agent-view-header-container {
-        display: flex;
-        justify-content: flex-end;
-        width: 100%;
-    }
-
-    .addy-back-button {
-        background-color: transparent !important;
-        border: none !important;
-        cursor: pointer !important;
-        font-size: 20px !important;
-        width: 50px !important;
-        height: 50px !important;
-        border-radius: 50% !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 0px !important;
-        display: none;
-        box-shadow: none !important;
-    }
-
-    .addy-back-button:hover {
-        background-color: rgba(0, 0, 0, 0.1) !important;
-        transition: 0.3s all ease !important;
-    }
-    .addy-agent-view-header-back-button-container {
-        width: 100% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-    }
-
-    .addy-agent-view-header-progress-text {
-        font-size: 14px;
-        color: #111;
-        display: none;
-        font-family: "Inter", sans-serif;
-    }
-
-    .addy-agent-view-header {
-        width: 100%;
-        max-width: 800px;
-    }
-
-    .addy-agent-view-progress-bar {
-        width: 100%;
-        height: 5px;
-        background-color: rgb(242, 242, 242);
-        border-radius: 4px;
-        margin-bottom: 15px;
-        overflow: hidden;
-        position: relative;
-        /* box-shadow: inset 0 1px 2px rgba(0,0,0,0.1); */
-        display: block;
-        display: none;
-    }
-
-    .addy-agent-view-progress-bar-fill {
-        width: 0%;
-        height: 100%;
-        transition: width 0.3s ease-in-out;
-        position: absolute;
-        left: 0;
-        top: 0;
-        border-radius: 4px;
-        display: block;
-    }
-
-    .addy-agent-view-header-progress-bar {
-        width: 100%;
-        height: 4px;
-        background-color: #f0f0f0;
-        border-radius: 2px;
-        margin-bottom: 15px;
-        overflow: hidden;
-    }
-
-    .addy-agent-view-header-progress-bar-fill {
-        width: 0%;
-        height: 100%;
-        transition: width 0.3s ease-in-out;
-    }
-
-    .addy-agent-form-section {
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-    }
-
-    .addy-agent-form-section-question {
-        max-width: 500px;
-        font-family: "Inter", sans-serif !important;
-        color: #111 !important;
-        font-size: 26px !important;
-        line-height: 36px !important;
-        text-align: center !important;
-        letter-spacing: 0.025em !important;
-    }
-
-    .addy-interactive-primary-button {
-        width: 100%;
-        padding: 13px 15px;
-        border-radius: 99999px;
-        color: white;
-        cursor: pointer;
-        border: none;
-        font-size: 16px;
-        border: 2px solid transparent;
-    }
-
-    .addy-interactive-primary-button:hover {
-        /* Make slightly bigger */
-        transform: scale(1.02);
-        transition: 0.3s all ease;
-    }
-
-    .addy-interactive-container {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .addy-interactive-iframe {
-        width: 100%;
-    }
-
-    .addy-three-dots-loader {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        display: flex;
-    }
-
-
-    /**
-     * ==============================================
-     * Dot Pulse
-     * ==============================================
-     */
-    .dot-pulse {
-    position: relative;
-    left: -9999px;
-    width: 10px;
-    height: 10px;
-    border-radius: 5px;
-    background-color: ${data.primaryColor};
-    color: ${data.primaryColor};
-    box-shadow: 9999px 0 0 -5px;
-    animation: dot-pulse 1.5s infinite linear;
-    animation-delay: 0.25s;
-    }
-    .dot-pulse::before, .dot-pulse::after {
-    content: "";
-    display: inline-block;
-    position: absolute;
-    top: 0;
-    width: 10px;
-    height: 10px;
-    border-radius: 5px;
-    background-color: ${data.primaryColor};
-    color: ${data.primaryColor};
-    }
-    .dot-pulse::before {
-    box-shadow: 9984px 0 0 -5px;
-    animation: dot-pulse-before 1.5s infinite linear;
-    animation-delay: 0s;
-    }
-    .dot-pulse::after {
-    box-shadow: 10014px 0 0 -5px;
-    animation: dot-pulse-after 1.5s infinite linear;
-    animation-delay: 0.5s;
-    }
-    .addy-simple-paragraph {
-        font-family: "Inter", sans-serif !important;
-        color: #111 !important;
-        font-size: 16px !important;
-        line-height: 18px !important;
-        margin: 10px !important;
-    }
-
-    @keyframes dot-pulse-before {
-    0% {
-        box-shadow: 9984px 0 0 -5px;
-    }
-    30% {
-        box-shadow: 9984px 0 0 2px;
-    }
-    60%, 100% {
-        box-shadow: 9984px 0 0 -5px;
-    }
-    }
-    @keyframes dot-pulse {
-    0% {
-        box-shadow: 9999px 0 0 -5px;
-    }
-    30% {
-        box-shadow: 9999px 0 0 2px;
-    }
-    60%, 100% {
-        box-shadow: 9999px 0 0 -5px;
-    }
-    }
-    @keyframes dot-pulse-after {
-    0% {
-        box-shadow: 10014px 0 0 -5px;
-    }
-    30% {
-        box-shadow: 10014px 0 0 2px;
-    }
-    60%, 100% {
-        box-shadow: 10014px 0 0 -5px;
-    }
-    }
-`
+`;
