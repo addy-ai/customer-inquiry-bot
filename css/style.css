@@ -394,14 +394,16 @@ label {
 }
 
 .addy-widget-card h2 {
-    margin: 0;
-    font-size: 1.2rem;
+    margin: 0 !important;
+    font-size: 1.2rem !important;
+    color: #111 !important;
 }
 
 .addy-widget-card p {
-    margin: 0.5rem 0 1rem;
-    color: #151920;
-    opacity: 0.5;
+    margin: 0.5rem 0 1rem !important;
+    color: #151920 !important;
+    opacity: 0.5 !important;
+    font-weight: normal !important;
 }
 
 .addy-widget-card button {
