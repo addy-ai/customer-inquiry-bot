@@ -231,7 +231,9 @@ function handleNextQuestion(nextQuestion) {
     }
     if (nextQuestion.type == "endOfFlow") {
         // Remove the current question element
-        window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-form-section").remove();
+        if (window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-form-section")) {
+            window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-form-section").remove();
+        }
         // Get the last ".addy-agent-form-section" element and hide it
         const lastQuestionElement = window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-form-section:last-child");
         if (lastQuestionElement) {
