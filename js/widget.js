@@ -352,7 +352,6 @@ function handleNextQuestion(nextQuestion) {
         // "addy-agent-view" is now in the window.parent.document.body
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-content").appendChild(nextQuestionElement);
     }
-    
     // Hide all question elements
     window.parent.document.querySelectorAll('.addy-agent-form-section').forEach(el => {
         el.style.display = 'none';
@@ -476,6 +475,15 @@ function createNextQuestionElement(nextQuestion) {
     iframe.style.border = "none";
     iframe.setAttribute("srcdoc", nextQuestion.uiComponent);
     nextQuestionElement.appendChild(iframe);
+
+    // If the next question type is getUserConsent, then append the privacy policy and terms of service link
+    if (nextQuestion.type == "getUserConsent") {
+        const privacyPolicyAndTermsOfService = document.createElement("div");
+        privacyPolicyAndTermsOfService.innerHTML = privacyPolicyAndTermsOfServiceHTML
+            .replaceAll("{{privacyPolicyURL}}", data.privacyPolicyURL || "https://addy.so/privacypolicy")
+            .replaceAll("{{termsOfServiceURL}}", data.termsOfServiceURL || "https://addy.so/termsofservice");
+        nextQuestionElement.appendChild(privacyPolicyAndTermsOfService);
+    }
 
     // Create a button if needed
     if (nextQuestion.type != "selector") {
@@ -660,3 +668,10 @@ const successScreenHTML = `
         </button>
     </div>
 `;
+
+const privacyPolicyAndTermsOfServiceHTML = `
+    <div style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+        <a href="{{privacyPolicyURL}}" target="_blank">Privacy Policy</a>
+        <a href="{{termsOfServiceURL}}" target="_blank">Terms of Service</a>
+    </div>
+`
