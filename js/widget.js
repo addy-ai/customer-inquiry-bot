@@ -444,7 +444,7 @@ function updateIframeHeightToItsContent(iframe, interactiveData) {
             additionalHeight = 5;
         }
         
-        const contentHeight = iframe.contentWindow.document.body.scrollHeight + additionalHeight;
+        let contentHeight = iframe.contentWindow.document.body.scrollHeight + additionalHeight;
         iframe.style.height = `${contentHeight}px`;
     });
 }
@@ -476,8 +476,8 @@ function createNextQuestionElement(nextQuestion) {
     iframe.setAttribute("srcdoc", nextQuestion.uiComponent);
     nextQuestionElement.appendChild(iframe);
 
-    // If the next question type is getUserConsent, then append the privacy policy and terms of service link
-    if (nextQuestion.type == "getUserConsent") {
+    // If the next question type is communicationPreferencesWithConsentCheckbox, then append the privacy policy and terms of service link
+    if (nextQuestion.type == "communicationPreferencesWithConsentCheckbox") {
         const privacyPolicyAndTermsOfService = document.createElement("div");
         privacyPolicyAndTermsOfService.innerHTML = privacyPolicyAndTermsOfServiceHTML
             .replaceAll("{{privacyPolicyURL}}", data.privacyPolicyURL || "https://addy.so/privacypolicy")
@@ -671,7 +671,7 @@ const successScreenHTML = `
 
 const privacyPolicyAndTermsOfServiceHTML = `
     <div style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
-        <a href="{{privacyPolicyURL}}" target="_blank">Privacy Policy</a>
-        <a href="{{termsOfServiceURL}}" target="_blank">Terms of Service</a>
+        <a style="font-size: 13px;" href="{{privacyPolicyURL}}" target="_blank">Privacy Policy</a>
+        <a style="font-size: 13px;" href="{{termsOfServiceURL}}" target="_blank">Terms of Service</a>
     </div>
 `
