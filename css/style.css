@@ -314,6 +314,7 @@ label {
 .addy-interactive-iframe {
     width: 100%;
     border: none;
+    max-height: 430px;
 }
 
 .addy-three-dots-loader {
