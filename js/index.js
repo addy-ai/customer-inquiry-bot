@@ -4,36 +4,80 @@
 const currentUrl = window.location.href;
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
-const data = JSON.parse(decodeURIComponent(urlParams.get("data")));
+let data = JSON.parse(decodeURIComponent(urlParams.get("data")));
 let suggestedPromptClicked = null;
 
-// Defaults
-// console.log(queryString);
-// console.log(data)
-data.avatarURL ||= "https://i.imgur.com/9VBT3XI.png";
-data.name ||= "My Chatbot";
-data.chatbotName ||= "Addy";
-data.welcomeMessage ||= "Hello! How can I help you today?";
-data.inputPlaceholder ||= "Ask me anything...";
-data.quickPrompts =
-  data &&
-  Array.isArray(data.suggestedQuestions) &&
-  data.suggestedQuestions.length > 0
-    ? data.suggestedQuestions
-    : [];
+console.log("Data from URL", data)
 
-data.primaryColor ||= "#745DDE";
-data.primaryColorName ||= "Purple";
+let customerAvatarURL = "https://i.imgur.com/WjAIvVp.png";
+let customerName = "You";
+let chatbotAPI =
+  data?.env == "test"
+    ? "http://127.0.0.1:5003/addy-ai-dev/us-central1"
+    : data?.env == "development"
+    ? "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer"
+    : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer";
+let backendAPI =
+  data?.env == "test"
+    ? "http://127.0.0.1:5003/addy-ai-dev/us-central1"
+    : data?.env == "development"
+    ? "https://backend-dev-111911035666.us-central1.run.app"
+    : "https://backend-prod-zquodzeuva-uc.a.run.app";
 
-data.chatId = "website-chatbot-" + uuidv4();
+if (data?.env == "test-local") {
+  backendAPI = "http://localhost:8080";
+}
 
-data.primaryColor &&
-  document.documentElement.style.setProperty(
-    "--user-message-color",
-    data.primaryColor
-  );
+// Initialize everything after window loads
+window.onload = async function() {
+    try {
+        if (!data) {
+            // Fetch the data from the backend
+            const publicId = urlParams.get("publicId");
+            if (!publicId) {
+                console.error("No publicId found in URL, cannot load chatbot")
+                return;
+            }
+            data = await getChatBotData(publicId);
+            console.log("Data from API", data);
+        }
 
-// console.log(data)
+        if (!data) {
+            console.error("No chatbot data to load")
+            return;
+        }
+
+        // Defaults
+        data.avatarURL ||= "https://i.imgur.com/9VBT3XI.png";
+        data.name ||= "My Chatbot";
+        data.chatbotName ||= "Addy";
+        data.welcomeMessage ||= "Hello! How can I help you today?";
+        data.inputPlaceholder ||= "Ask me anything...";
+        data.quickPrompts =
+          data &&
+          Array.isArray(data.suggestedQuestions) &&
+          data.suggestedQuestions.length > 0
+            ? data.suggestedQuestions
+            : [];
+
+        data.primaryColor ||= "#745DDE";
+        data.primaryColorName ||= "Purple";
+
+        data.chatId = "website-chatbot-" + uuidv4();
+
+        data.primaryColor &&
+          document.documentElement.style.setProperty(
+            "--user-message-color",
+            data.primaryColor
+          );
+
+        console.log("Data now ready, initializing bot")
+        initializeBot();
+    } catch (error) {
+        console.error("Error initializing chatbot:", error);
+    }
+};
+
 /*
 SAMPLE DATA
 avatarURL: "https://i.imgur.com/9VBT3XI.png"
@@ -52,24 +96,6 @@ quickPrompts : [
 ]
 welcomeMessage : "Hello! How can I help you today?"
 */
-let customerAvatarURL = "https://i.imgur.com/WjAIvVp.png";
-let customerName = "You";
-let chatbotAPI =
-  data.env == "test"
-    ? "http://127.0.0.1:5003/addy-ai-dev/us-central1"
-    : data.env == "development"
-    ? "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer"
-    : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer";
-let backendAPI =
-  data.env == "test"
-    ? "http://127.0.0.1:5003/addy-ai-dev/us-central1"
-    : data.env == "development"
-    ? "https://backend-dev-111911035666.us-central1.run.app"
-    : "https://backend-prod-zquodzeuva-uc.a.run.app";
-
-if (data.env == "test-local") {
-  backendAPI = "http://localhost:8080";
-}
 
 //backendAPI = "http://127.0.0.1:5003/addy-ai-dev/us-central1";
 const chatHistory = document.querySelector("#chat-history");
@@ -79,10 +105,6 @@ const header = document.querySelector(".header");
 const promptContainer = document.querySelector(".auto-prompts-container");
 
 sendBtn.disabled = true;
-
-window.onload = async function () {
-    initializeBot();
-}
 
 async function getUserData() {
     let browserInfo = {
@@ -487,6 +509,40 @@ messageInput.addEventListener("input", () => {
   const trimmedValue = messageInput.value.trim();
   sendBtn.disabled = trimmedValue.length <= 1;
 });
+
+async function getChatBotData(publicId) {
+    const host = window.location.host;
+    const response = await fetch(`${chatbotAPI}/bot-info-public/?publicId=${publicId}&host=${host}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    })
+    .then((response) => {
+        return response.json()
+    })
+    .then(data => { 
+        if (!data.success) throw new Error("Error: No data found");
+        const dataWithWidgets = {
+            ...data?.data?.config,
+            leadFunnelWidgets: data?.data?.leadFunnelWidgets,
+            leadFunnelWidgetsConfig: data?.data?.leadFunnelWidgetsConfig,
+        }
+        return dataWithWidgets;
+    })
+    .catch((error) => {
+        console.error("Error", error);
+        return undefined;
+    });
+    
+    if (!response) return undefined;
+    response.primaryColor ||= "#745DDE";
+    response.primaryColorName ||= "Purple";
+    response.publicId = publicId;
+    response.host = window.location.host || "local";
+    response.env = response?.env;
+    return response;
+}
 
 // Update the class names and structure to match the new CSS
 const customerMessageHTML = `
