@@ -33,7 +33,11 @@ window.onload = async function() {
     try {
         if (!data) {
             // Fetch the data from the backend
-            const publicId = urlParams.get("publicId") || "014588c3-f7b8-4736-8790-041daae72d47";
+            const publicId = urlParams.get("publicId");
+            if (!publicId) {
+                console.error("No publicId found in URL, cannot load chatbot")
+                return;
+            }
             data = await getChatBotData(publicId);
             console.log("Data from API", data);
         }
