@@ -5,6 +5,7 @@ const currentUrl = window.location.href;
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 let data = JSON.parse(decodeURIComponent(urlParams.get("data")));
+let env = urlParams.get("env");
 let suggestedPromptClicked = null;
 
 console.log("Data from URL", data)
@@ -14,17 +15,17 @@ let customerName = "You";
 let chatbotAPI =
   data?.env == "test"
     ? "http://127.0.0.1:5003/addy-ai-dev/us-central1"
-    : data?.env == "development"
+    : (data?.env == "development" || env == "development")
     ? "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer"
     : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer";
 let backendAPI =
   data?.env == "test"
     ? "http://127.0.0.1:5003/addy-ai-dev/us-central1"
-    : data?.env == "development"
+    : (data?.env == "development" || env == "development")
     ? "https://backend-dev-111911035666.us-central1.run.app"
     : "https://backend-prod-zquodzeuva-uc.a.run.app";
 
-if (data?.env == "test-local") {
+if (data?.env == "test-local" || env == "test-local") {
   backendAPI = "http://localhost:8080";
 }
 
