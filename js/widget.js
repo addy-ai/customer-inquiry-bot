@@ -21,7 +21,7 @@ window.addEventListener("load", async function () {
         console.error("Error: No data found");
         return;
     };
-    console.log("Data", data);
+    // console.log("Data", data);
     let env = scriptTag.getAttribute("env") || "development";
     // Set the data object
     data.env = env;
@@ -104,7 +104,7 @@ function initializeWidgets(widgetIdsToRender, agentPublicId) {
         "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/css/style.min.css";
     // Insert the style sheet link to this window.parent.document.head if not already present
     // log window.parent.document.head
-    console.log("Window parent document head", window.parent.document.head);
+    // console.log("Window parent document head", window.parent.document.head);
     // Append the style sheet link to the window.parent.document.head if not already present
     if (!window.parent.document.head.querySelector(`link[href="${styleSheetLink}"]`)) {
         const linkElement = document.createElement("link");
@@ -122,8 +122,14 @@ function initializeWidgets(widgetIdsToRender, agentPublicId) {
             iconImage: iconImageLookup[widget.id] || "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/home.svg"
         });
         // Find all elements where addy-widget-id = agentPublicId  && widgets == scriptTag.widgets
-        const widgetCardContainers = document.body.querySelectorAll(`[addy-widget-id="${agentPublicId}"][widgets="${scriptTag.getAttribute("widgets")}"]`);
-        console.log("Widget card containers", widgetCardContainers);
+        let widgetCardContainers = document.body.querySelectorAll(`[addy-widget-id="${agentPublicId}"][widgets="${scriptTag.getAttribute("widgets")}"]`);
+        // find the parent of this script tag
+        const scriptTagParent = scriptTag?.parentElement;
+        // If widget card containers is empty, then add script tag parent to the widget card containers
+        if (widgetCardContainers.length === 0 && scriptTagParent) {
+            widgetCardContainers = [scriptTagParent];
+        }
+        // console.log("Widget card containers", widgetCardContainers);
         widgetCardContainers.forEach(container => {
             container.appendChild(widgetCard);
             // Update the style to be horizontal flex, justify content center, align items center
