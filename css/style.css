@@ -637,6 +637,79 @@ label {
     margin: 10px !important;
 }
 
+.addy-hero-image {
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+}
+
+.addy-hero-content {
+    display: flex;
+    flex-direction: row;
+    gap: 30px;
+    justify-content: center;
+    align-items: center;
+    
+}
+
+.addy-widget-hero-container {
+    padding-top: 50px;
+    padding-bottom: 50px;
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+    margin-bottom: 50px;
+}
+
+.addy-widget-icons-container {
+    display: flex;
+    flex-direction: row;
+    gap: 30px;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 50px;
+}
+
+.addy-hero-content-text {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.addy-hero-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 1);
+}
+
+.addy-social-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.7);
+    text-decoration: none;
+}
+
+.addy-social-icons {
+    display: flex;
+    gap: 30px;
+}
+
+.addy-social-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.addy-hero-description {
+    margin: 0;
+    font-size: 16px;
+    font-weight: normal;
+    color: rgba(255, 255, 255, 0.8);
+}
+
 @keyframes dot-pulse-before {
     0% {
         box-shadow: 9984px 0 0 -5px;
