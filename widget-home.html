@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Addy AI Widget</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/css/style.min.css">
+</head> 
+
+<body>
+
+    <div class="addy-widget-hero-container"></div>
+    <div class="addy-widget-icons-container"></div>
+    
+
+    <div class="addy-widget-card-container">
+        <script>
+            // Extract agent ID from URL parameters
+            const homeUrlParams = new URLSearchParams(window.location.search);
+            const agentId = homeUrlParams.get('id');
+            
+            if (agentId) {
+                // Dynamically create and inject the widget script
+                const script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.src = 'js/widget.js';
+                script.id = agentId;
+                script.setAttribute('mode', 'home');
+                script.setAttribute('env', 'development'); // Change to 'production' when deployed
+                script.setAttribute('widgets', 'buy-home,refinance,rates'); // Default widgets for home mode
+                document.currentScript.parentElement.appendChild(script);
+            } else {
+                // Show error message if no agent ID provided
+                document.body.innerHTML = `
+                    <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+                        <h2>Missing Agent ID</h2>
+                        <p>Please provide an agent ID in the URL: ?id=your-agent-id</p>
+                </div>
+                `;
+            }
+        </script>
+    </div>
+
+    <br>
+</body>
+</html>
