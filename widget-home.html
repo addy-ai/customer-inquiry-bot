@@ -16,9 +16,11 @@
 
     <div class="addy-widget-card-container">
         <script>
-            // Extract agent ID from URL parameters
+            // Extract parameters from URL
             const homeUrlParams = new URLSearchParams(window.location.search);
             const agentId = homeUrlParams.get('id');
+            const env = homeUrlParams.get('env');
+            const widgets = homeUrlParams.get('widgets');
             
             if (agentId) {
                 // Dynamically create and inject the widget script
@@ -27,8 +29,8 @@
                 script.src = 'js/widget.js';
                 script.id = agentId;
                 script.setAttribute('mode', 'home');
-                script.setAttribute('env', 'development'); // Change to 'production' when deployed
-                script.setAttribute('widgets', 'buy-home,refinance,rates'); // Default widgets for home mode
+                script.setAttribute('env', env || 'development');
+                script.setAttribute('widgets', widgets || 'buy-home,refinance,rates'); // Use URL param or default
                 document.currentScript.parentElement.appendChild(script);
             } else {
                 // Show error message if no agent ID provided
