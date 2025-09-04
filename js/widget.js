@@ -12,6 +12,30 @@ let lastKnownQuestionUIState = {};
 let previousWidgetIframeHeight = null;
 
 let TOTAL_EXPECTED_QUESTIONS = 15;
+const USE_MOCK_DATA = false;
+let mockData = {
+    leadFunnelWidgetsConfig: {
+        heroSection: {
+            title: "John Doe",
+            description: "Horizon Mortgage",
+            image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+        },
+        social: {
+            facebook: {
+                url: "https://facebook.com/",
+                icon: "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/facebook.svg"
+            },
+            instagram: {
+                url: "https://instagram.com/",
+                icon: "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/instagram.svg"
+            },
+            youtube: {
+                url: "https://youtube.com/",
+                icon: "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/youtube.svg"
+            }
+        }
+    },
+};
 
 let backendAPI;
 
@@ -35,29 +59,13 @@ window.addEventListener("load", async function () {
         if (!data.leadFunnelWidgetsConfig) {
             data.leadFunnelWidgetsConfig = {};
         }
-        
-        // Mock hero section data
-        data.leadFunnelWidgetsConfig.heroSection = {
-            title: "Benji Gecy",
-            description: "Beaufort Lending",
-            image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
-        };
-        
-        // Mock social data
-        data.leadFunnelWidgetsConfig.social = {
-            facebook: {
-                url: "https://facebook.com/benjigecylending",
-                icon: "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/facebook.svg"
-            },
-            instagram: {
-                url: "https://instagram.com/benjigecylending",
-                icon: "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/instagram.svg"
-            },
-            youtube: {
-                url: "https://youtube.com/@benjigecylending",
-                icon: "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/youtube.svg"
-            }
-        };
+
+        if (USE_MOCK_DATA) {
+            // Mock hero section data
+            data.leadFunnelWidgetsConfig.heroSection = mockData.leadFunnelWidgetsConfig.heroSection;
+            // Mock social data
+            data.leadFunnelWidgetsConfig.social = mockData.leadFunnelWidgetsConfig.social;
+        }
     }
     
     // Set the CSS variable for primary color
@@ -71,8 +79,8 @@ window.addEventListener("load", async function () {
 
     // Render home mode specific sections
     if (mode === "home") {
-        renderHeroSection(data.leadFunnelWidgetsConfig?.heroSection);
-        renderSocialIcons(data.leadFunnelWidgetsConfig?.social);
+        renderHeroSection(data.leadFunnelWidgetsConfig?.heroSection || mockData.leadFunnelWidgetsConfig.heroSection);
+        renderSocialIcons(data.leadFunnelWidgetsConfig?.social || mockData.leadFunnelWidgetsConfig.social);
     }
 
     // Get the widget ids to create from the scriptTag and the widget ids in the data
@@ -144,10 +152,10 @@ function renderHeroSection(heroData) {
     
     heroContainer.innerHTML = `
         <div class="addy-hero-content">
-            <img src="${heroData.image}" alt="${heroData.title}" class="addy-hero-image" />
+            <img src="${heroData.image || mockData.leadFunnelWidgetsConfig.heroSection.image}" alt="${heroData.title || mockData.leadFunnelWidgetsConfig.heroSection.title}" class="addy-hero-image" />
             <div class="addy-hero-content-text">
-                <h1 class="addy-hero-title">${heroData.title}</h1>
-                <p class="addy-hero-description">${heroData.description}</p>
+                <h1 class="addy-hero-title">${heroData.title || mockData.leadFunnelWidgetsConfig.heroSection.title}</h1>
+                <p class="addy-hero-description">${heroData.description || mockData.leadFunnelWidgetsConfig.heroSection.description}</p>
             </div>
         </div>
     `;
@@ -168,8 +176,8 @@ function renderSocialIcons(socialData) {
         const social = socialData[platform];
         if (social.url) {
             socialHTML += `
-                <a href="${social.url}" target="_blank" class="addy-social-link">
-                    <img src="${social.icon}" alt="${platform}" class="addy-social-icon" />
+                <a href="${social.url || mockData.leadFunnelWidgetsConfig.social[platform].url}" target="_blank" class="addy-social-link">
+                    <img src="${social.icon || mockData.leadFunnelWidgetsConfig.social[platform].icon}" alt="${platform}" class="addy-social-icon" />
                     <span class="addy-social-label">${platform.charAt(0).toUpperCase() + platform.slice(1)}</span>
                 </a>
             `;
