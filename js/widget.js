@@ -88,6 +88,47 @@ window.addEventListener("load", async function () {
     const agentPublicId = scriptTag.id;
     initializeWidgets(widgetIdsToRender, agentPublicId);
     listenForInteractiveResponse();
+
+    // Expose global function to programmatically trigger widgets
+    window.addyTriggerWidget = function(targetWidgetId) {
+        // Validate inputs
+        if (!targetWidgetId || typeof targetWidgetId !== 'string') {
+            console.error('[Addy Widget] Invalid widget ID provided');
+            return false;
+        }
+
+        // Check if widget is in the configured list to render
+        if (!widgetIdsToRender.includes(targetWidgetId)) {
+            console.error(`[Addy Widget] Widget "${targetWidgetId}" is not configured for this agent. Available widgets: ${widgetIdsToRender.join(', ')}`);
+            return false;
+        }
+
+        // Find the widget from the loaded data
+        const widget = data.leadFunnelWidgets.find(w => w.id === targetWidgetId);
+        if (!widget) {
+            console.error(`[Addy Widget] Widget "${targetWidgetId}" not found in agent configuration`);
+            return false;
+        }
+
+        // Set the interactive mode and widget id
+        interactiveMode = true;
+        widgetId = targetWidgetId;
+
+        // Add icon image if not present
+        if (!widget.iconImage) {
+            widget.iconImage = iconImageLookup[targetWidgetId] || "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/home.svg";
+        }
+
+        // Trigger the widget view
+        createAgentView(widget);
+        
+        console.log(`[Addy Widget] Successfully triggered widget: ${targetWidgetId}`);
+        return true;
+    };
+
+    // Log available widgets for developers
+    console.log('[Addy Widget] Loaded successfully. Available widgets:', widgetIdsToRender);
+    console.log('[Addy Widget] Trigger widgets programmatically using: window.addyTriggerWidget("widget-id")');
 });
 
 const iconImageLookup = {
