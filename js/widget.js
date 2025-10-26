@@ -234,15 +234,27 @@ function initializeWidgets(widgetIdsToRender, agentPublicId) {
         scriptTag.getAttribute("env").includes("local") ?
         "css/style.css" :
         "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/css/style.min.css";
-    // Insert the style sheet link to this window.parent.document.head if not already present
-    // log window.parent.document.head
-    // console.log("Window parent document head", window.parent.document.head);
-    // Append the style sheet link to the window.parent.document.head if not already present
-    if (!window.parent.document.head.querySelector(`link[href="${styleSheetLink}"]`)) {
+    
+    // Inject CSS into current document (for widget cards)
+    if (!document.head.querySelector(`link[href="${styleSheetLink}"]`)) {
         const linkElement = document.createElement("link");
         linkElement.setAttribute("rel", "stylesheet");
         linkElement.setAttribute("href", styleSheetLink);
-        window.parent.document.head.appendChild(linkElement);
+        document.head.appendChild(linkElement);
+    }
+    
+    // Try to inject CSS into parent document (for full-screen overlays)
+    // Wrap in try-catch to handle cross-origin restrictions
+    try {
+        if (!window.parent.document.head.querySelector(`link[href="${styleSheetLink}"]`)) {
+            const parentLinkElement = document.createElement("link");
+            parentLinkElement.setAttribute("rel", "stylesheet");
+            parentLinkElement.setAttribute("href", styleSheetLink);
+            window.parent.document.head.appendChild(parentLinkElement);
+        }
+    } catch (error) {
+        // Cross-origin restriction - parent injection failed, but current document has CSS
+        console.log('[Addy Widget] Parent CSS injection skipped (cross-origin)');
     }
     // Only render the widgets that are in the widgetIdsToRender array
     data.leadFunnelWidgets.forEach(widget => {
