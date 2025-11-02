@@ -587,6 +587,65 @@ label {
     z-index: 99999;
 }
 
+/* Full-screen mode styles - ONLY affects widgets with fullScreenMode: true */
+.addy-agent-view.addy-agent-view-fullscreen {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    padding: 20px;
+    margin: 0;
+    overflow-y: auto;
+}
+
+/* Adjust content container for fullscreen mode */
+.addy-agent-view.addy-agent-view-fullscreen .addy-agent-view-content {
+    max-width: 1200px;
+    width: 100%;
+    justify-content: flex-start;
+    padding-top: 40px;
+}
+
+/* Adjust question text for fullscreen mode */
+.addy-agent-view.addy-agent-view-fullscreen .addy-agent-form-section-question {
+    max-width: 900px;
+    font-size: 32px !important;
+    line-height: 42px !important;
+}
+
+/* Adjust form sections for fullscreen mode */
+.addy-agent-view.addy-agent-view-fullscreen .addy-agent-form-section {
+    max-width: 800px;
+}
+
+/* Responsive adjustments for fullscreen mode on smaller screens */
+@media (max-width: 768px) {
+    .addy-agent-view.addy-agent-view-fullscreen {
+        padding: 15px;
+    }
+    
+    .addy-agent-view.addy-agent-view-fullscreen .addy-agent-view-content {
+        padding-top: 20px;
+    }
+    
+    .addy-agent-view.addy-agent-view-fullscreen .addy-agent-form-section-question {
+        font-size: 24px !important;
+        line-height: 32px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .addy-agent-view.addy-agent-view-fullscreen {
+        padding: 10px;
+    }
+    
+    .addy-agent-view.addy-agent-view-fullscreen .addy-agent-form-section-question {
+        font-size: 20px !important;
+        line-height: 28px !important;
+    }
+}
+
 
 /**
      * ==============================================

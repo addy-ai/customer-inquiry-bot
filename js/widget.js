@@ -352,6 +352,12 @@ async function createAgentView(widget) {
     // The overlay should be scrollable and have the class "addy-custom-scroll"
     let agentView = document.createElement("div");
     agentView.setAttribute("class", "addy-agent-view");
+    
+    // Add fullscreen class if widget has fullScreenMode set to true
+    if (widget.fullScreenMode === true) {
+        agentView.classList.add("addy-agent-view-fullscreen");
+    }
+    
     agentView.innerHTML = `
         <div class="addy-agent-view-header-container">
             <button class="addy-close-button">
