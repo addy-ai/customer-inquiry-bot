@@ -13,6 +13,30 @@ let previousWidgetIframeHeight = null;
 let progressSnapshots = [];
 
 let TOTAL_EXPECTED_QUESTIONS = 15;
+const USE_MOCK_DATA = false;
+let mockData = {
+    leadFunnelWidgetsConfig: {
+        heroSection: {
+            title: "John Doe",
+            description: "Horizon Mortgage",
+            image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+        },
+        social: {
+            facebook: {
+                url: "https://facebook.com/",
+                icon: "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/facebook.svg"
+            },
+            instagram: {
+                url: "https://instagram.com/",
+                icon: "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/instagram.svg"
+            },
+            youtube: {
+                url: "https://youtube.com/",
+                icon: "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/youtube.svg"
+            }
+        }
+    },
+};
 
 let backendAPI;
 
@@ -36,6 +60,12 @@ window.addEventListener("load", async function () {
         if (!data.leadFunnelWidgetsConfig) {
             data.leadFunnelWidgetsConfig = {};
         }
+        
+        // Use mock data for testing if enabled
+        if (USE_MOCK_DATA) {
+            data.leadFunnelWidgetsConfig.heroSection = mockData.leadFunnelWidgetsConfig.heroSection;
+            data.leadFunnelWidgetsConfig.social = mockData.leadFunnelWidgetsConfig.social;
+        }
     }
     
     // Set the CSS variable for primary color
@@ -49,8 +79,8 @@ window.addEventListener("load", async function () {
 
     // Render home mode specific sections
     if (mode === "home") {
-        renderHeroSection(data.leadFunnelWidgetsConfig?.heroSection);
-        renderSocialIcons(data.leadFunnelWidgetsConfig?.social);
+        renderHeroSection(data.leadFunnelWidgetsConfig?.heroSection || mockData.leadFunnelWidgetsConfig.heroSection);
+        renderSocialIcons(data.leadFunnelWidgetsConfig?.social || mockData.leadFunnelWidgetsConfig.social);
     }
 
     // Get the widget ids to create from the scriptTag and the widget ids in the data
