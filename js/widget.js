@@ -322,27 +322,57 @@ function createWidgetCard(widget) {
     const extraButtonsContainer = widgetCard.querySelector('.addy-widget-extra-buttons');
     const primaryColor = data.leadFunnelWidgetsConfig?.primaryColor || data.primaryColor;
 
-    // Add Calendly "Book a Call" button
-    if (data.leadFunnelWidgetsConfig?.calendlyLink) {
+    // Helper function to apply button styles inline (so it works even before CSS is updated on CDN)
+    const applyButtonStyles = (btn, bgColor) => {
+        btn.style.display = 'block';
+        btn.style.width = '100%';
+        btn.style.padding = '0.75rem 1.5rem';
+        btn.style.borderRadius = '9999px';
+        btn.style.backgroundColor = bgColor;
+        btn.style.color = 'white';
+        btn.style.textAlign = 'center';
+        btn.style.textDecoration = 'none';
+        btn.style.fontSize = '1rem';
+        btn.style.fontWeight = '500';
+        btn.style.cursor = 'pointer';
+        btn.style.boxSizing = 'border-box';
+        btn.style.transition = 'transform 0.3s ease';
+    };
+
+    // Helper function to ensure URL has a protocol (prevents relative URL issues)
+    const ensureAbsoluteUrl = (url) => {
+        if (!url) return url;
+        // If URL doesn't start with http:// or https://, prepend https://
+        if (!/^https?:\/\//i.test(url)) {
+            return 'https://' + url;
+        }
+        return url;
+    };
+
+    // Add Calendly "Book a Call" button (only if calendlyLink has actual content)
+    const calendlyLink = data.leadFunnelWidgetsConfig?.calendlyLink?.trim();
+    if (calendlyLink) {
         const calendlyBtn = document.createElement('a');
-        calendlyBtn.href = data.leadFunnelWidgetsConfig.calendlyLink;
+        calendlyBtn.href = ensureAbsoluteUrl(calendlyLink);
         calendlyBtn.target = '_blank';
         calendlyBtn.className = 'addy-widget-secondary-btn';
-        calendlyBtn.style.backgroundColor = primaryColor;
+        applyButtonStyles(calendlyBtn, primaryColor);
         calendlyBtn.textContent = 'Book a Call';
         extraButtonsContainer.appendChild(calendlyBtn);
     }
 
-    // Add custom links
+    // Add custom links (only if both label and url have actual content)
     const customLinks = data.leadFunnelWidgetsConfig?.customLinks || [];
     customLinks.forEach(link => {
-        if (link.label && link.url) {
+        const label = link.label?.trim();
+        const url = link.url?.trim();
+        if (label && url) {
             const linkBtn = document.createElement('a');
-            linkBtn.href = link.url;
+            linkBtn.href = ensureAbsoluteUrl(url);
             linkBtn.target = '_blank';
             linkBtn.className = 'addy-widget-secondary-btn';
-            linkBtn.style.backgroundColor = primaryColor;
-            linkBtn.textContent = link.label;
+            applyButtonStyles(linkBtn, primaryColor);
+            linkBtn.textContent = label;
             extraButtonsContainer.appendChild(linkBtn);
         }
     });
