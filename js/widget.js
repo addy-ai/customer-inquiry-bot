@@ -10,6 +10,7 @@ let interactiveSectionState = [];
 let currentQuestionIndex = 0;
 let lastKnownQuestionUIState = {};
 let previousWidgetIframeHeight = null;
+let progressSnapshots = [];
 
 let TOTAL_EXPECTED_QUESTIONS = 15;
 const USE_MOCK_DATA = false;
@@ -54,16 +55,15 @@ window.addEventListener("load", async function () {
     data.mode = mode;
     data.primaryColor = data?.leadFunnelWidgetsConfig?.primaryColor || data?.primaryColor || "#745DDE";
     
-    // Add mock data for testing home mode
+    // Initialize leadFunnelWidgetsConfig for home mode if not present
     if (mode === "home") {
         if (!data.leadFunnelWidgetsConfig) {
             data.leadFunnelWidgetsConfig = {};
         }
-
+        
+        // Use mock data for testing if enabled
         if (USE_MOCK_DATA) {
-            // Mock hero section data
             data.leadFunnelWidgetsConfig.heroSection = mockData.leadFunnelWidgetsConfig.heroSection;
-            // Mock social data
             data.leadFunnelWidgetsConfig.social = mockData.leadFunnelWidgetsConfig.social;
         }
     }
@@ -193,10 +193,10 @@ function renderHeroSection(heroData) {
     
     heroContainer.innerHTML = `
         <div class="addy-hero-content">
-            <img src="${heroData.image || mockData.leadFunnelWidgetsConfig.heroSection.image}" alt="${heroData.title || mockData.leadFunnelWidgetsConfig.heroSection.title}" class="addy-hero-image" />
+            ${heroData.image ? `<img src="${heroData.image}" alt="${heroData.title || ''}" class="addy-hero-image" />` : ''}
             <div class="addy-hero-content-text">
-                <h1 class="addy-hero-title">${heroData.title || mockData.leadFunnelWidgetsConfig.heroSection.title}</h1>
-                <p class="addy-hero-description">${heroData.description || mockData.leadFunnelWidgetsConfig.heroSection.description}</p>
+                ${heroData.title ? `<h1 class="addy-hero-title">${heroData.title}</h1>` : ''}
+                ${heroData.description ? `<p class="addy-hero-description">${heroData.description}</p>` : ''}
             </div>
         </div>
     `;
@@ -217,8 +217,8 @@ function renderSocialIcons(socialData) {
         const social = socialData[platform];
         if (social.url) {
             socialHTML += `
-                <a href="${social.url || mockData.leadFunnelWidgetsConfig.social[platform].url}" target="_blank" class="addy-social-link">
-                    <img src="${social.icon || mockData.leadFunnelWidgetsConfig.social[platform].icon}" alt="${platform}" class="addy-social-icon" />
+                <a href="${social.url}" target="_blank" class="addy-social-link">
+                    ${social.icon ? `<img src="${social.icon}" alt="${platform}" class="addy-social-icon" />` : ''}
                     <span class="addy-social-label">${platform.charAt(0).toUpperCase() + platform.slice(1)}</span>
                 </a>
             `;
@@ -407,23 +407,45 @@ async function createAgentView(widget) {
     // Reset the current question index
     currentQuestionIndex = 0;
     interactiveSectionState = [];
+    progressSnapshots = [];
 
     // Create the content
     getNextQuestion();
+    
+    // Ensure progress/back button hidden initially
+    const agentViewDom = window.parent.document.body.querySelector(".addy-agent-view");
+    if (agentViewDom) {
+        const progressText = agentViewDom.querySelector(".addy-agent-view-header-progress-text");
+        const progressWrapper = agentViewDom.querySelector(".addy-agent-view-progress-bar");
+        const backButton = agentViewDom.querySelector(".addy-back-button");
+        if (progressText) {
+            progressText.style.display = "none";
+            progressText.textContent = "0%";
+        }
+        if (progressWrapper) {
+            progressWrapper.style.display = "none";
+        }
+        if (backButton) {
+            backButton.style.display = "none";
+        }
+    }
 }
 
 
 
 function handleBackButtonClick() {
-    console.log("Handling back button click, current question index", currentQuestionIndex);
-    if (currentQuestionIndex <= 0) return;
+    console.log("[Back] Current question index:", currentQuestionIndex, "TOTAL:", TOTAL_EXPECTED_QUESTIONS);
+    // currentQuestionIndex matches data-question-index of current view
+    // Can't go back if we're on the first question (index 1)
+    if (currentQuestionIndex <= 1) return;
 
-    // Get the previous question element using currentQuestionIndex - 1
-    const previousQuestionElement = window.parent.document.querySelector(`.addy-agent-form-section[data-question-index="${currentQuestionIndex - 1}"]`);
-    console.log("Looking for previous question element at index", currentQuestionIndex - 1);
+    // DOM element index for previous question (currentQuestionIndex - 1)
+    const previousDOMIndex = currentQuestionIndex - 1;
+    
+    console.log("[Back] Looking for previous question element at DOM index", previousDOMIndex);
+    const previousQuestionElement = window.parent.document.querySelector(`.addy-agent-form-section[data-question-index="${previousDOMIndex}"]`);
     
     if (previousQuestionElement) {
-        // console.log("Found previous question element", previousQuestionElement);
         // Hide all question elements
         window.parent.document.querySelectorAll('.addy-agent-form-section').forEach(el => {
             el.style.display = 'none';
@@ -432,41 +454,40 @@ function handleBackButtonClick() {
         // Show the previous question element
         previousQuestionElement.style.display = 'flex';
 
-        // Decrement the current question index before calling handleNextQuestion
-        currentQuestionIndex--;
-        console.log("Decremented to new question index", currentQuestionIndex);
-        
-        // Don't increment the currentQuestionIndex in handleNextQuestion when going back
-        window.isGoingBack = true;
-        
-        // Call handleNextQuestion with the stored state for this index
-        if (interactiveSectionState[currentQuestionIndex]) {
-            handleNextQuestion(interactiveSectionState[currentQuestionIndex]);
-        }
-        
-        // Update progress bar and text
-        const progressBar = window.parent.document.querySelector(".addy-agent-view-progress-bar-fill");
+        // Update currentQuestionIndex to reflect the new position
+        currentQuestionIndex = previousDOMIndex;
+
+        // Apply stored progress snapshot for this question
+        applyProgressSnapshot(currentQuestionIndex);
+
+        const progressWrapper = window.parent.document.querySelector(".addy-agent-view-progress-bar");
         const progressText = window.parent.document.querySelector(".addy-agent-view-header-progress-text");
-        const progress = (currentQuestionIndex / TOTAL_EXPECTED_QUESTIONS) * 100;
-        progressBar.style.width = `${progress}%`;
-        progressBar.style.backgroundColor = data.primaryColor;
-        progressText.textContent = `${Math.round(progress)}%`;
-        
-        // If we're back at the first question, hide the back button and progress text
-        console.log("Current question index", currentQuestionIndex);
-        if (currentQuestionIndex === 1) {
-            console.log("Hiding back button and progress text");
+        if (currentQuestionIndex <= 1) {
             window.parent.document.querySelector(".addy-back-button").style.display = "none";
-            progressText.style.display = "none";
-            window.parent.document.querySelector(".addy-agent-view-progress-bar").style.display = "none";
+            if (progressWrapper) {
+                progressWrapper.style.display = "none";
+            }
+            if (progressText) {
+                progressText.style.display = "none";
+            }
+        } else {
+            window.parent.document.querySelector(".addy-back-button").style.display = "block";
+            if (progressWrapper) {
+                progressWrapper.style.display = "block";
+            }
+            if (progressText) {
+                progressText.style.display = "block";
+            }
         }
     } else {
-        console.log("No previous question element found at index", currentQuestionIndex - 1);
+        console.log("[Back] No previous question element found at DOM index", previousDOMIndex);
     }
 }
 
-function handleNextQuestion(nextQuestion) {
-    // Parse nextQuestion quesiton data as JSON if it's a string
+function handleNextQuestion(nextQuestion, options = {}) {
+    const { isCached = false } = options;
+    
+    // Parse nextQuestion question data as JSON if it's a string
     if (nextQuestion?.nextQuestion && typeof nextQuestion.nextQuestion == "string") {
         nextQuestion.nextQuestion = JSON.parse(nextQuestion.nextQuestion);
     }
@@ -490,24 +511,24 @@ function handleNextQuestion(nextQuestion) {
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-content").appendChild(successScreen);
         return;
     }    
-    // Store the question state
+    // Store the question state at the current index (before incrementing)
     interactiveSectionState[currentQuestionIndex] = nextQuestion;
+    // Increment to get the DOM index for this question
+    currentQuestionIndex++;
     
-    // Only increment the current question index if we're not going back
-    if (!window.isGoingBack) {
-        currentQuestionIndex++;
-    }
-    
-    // Check if we already have a question element at this index
-    let nextQuestionElement = document.querySelector(`.addy-agent-form-section[data-question-index="${currentQuestionIndex}"]`);
+    // Check if we already have a question element at this index (must check in parent document!)
+    let nextQuestionElement = window.parent.document.querySelector(`.addy-agent-form-section[data-question-index="${currentQuestionIndex}"]`);
+    let isNewElement = false;
 
     if (!nextQuestionElement) {
         // Create new question element if it doesn't exist
+        isNewElement = true;
         nextQuestionElement = createNextQuestionElement(nextQuestion);
         nextQuestionElement.setAttribute('data-question-index', currentQuestionIndex);
         // "addy-agent-view" is now in the window.parent.document.body
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-content").appendChild(nextQuestionElement);
     }
+    
     // Hide all question elements
     window.parent.document.querySelectorAll('.addy-agent-form-section').forEach(el => {
         el.style.display = 'none';
@@ -520,49 +541,88 @@ function handleNextQuestion(nextQuestion) {
     const iframe = nextQuestionElement.querySelector(".addy-interactive-iframe");
     updateIframeHeightToItsContent(iframe, nextQuestion);
 
-    // Add the next button on click listener
-    addNextButtonOnClickListener(nextQuestionElement, nextQuestion);
+    // Only add event listener for NEW elements to avoid duplicate handlers
+    if (isNewElement) {
+        addNextButtonOnClickListener(nextQuestionElement, nextQuestion);
+    }
 
-    // Update the TOTAL_EXPECTED_QUESTIONS
-    let numberOfQuestionsLeft = nextQuestion.nextQuestion.numberOfQuestionsLeft;
-    if (nextQuestion.type == "endOfFlow") {
-        numberOfQuestionsLeft += 1;
+    // Only update TOTAL_EXPECTED_QUESTIONS on FRESH API calls, not cached navigation
+    // This prevents percentage jumps when navigating back and forth
+    if (!isCached) {
+        let numberOfQuestionsLeft = nextQuestion.nextQuestion?.numberOfQuestionsLeft;
+        if (numberOfQuestionsLeft !== undefined && numberOfQuestionsLeft !== null) {
+            TOTAL_EXPECTED_QUESTIONS = numberOfQuestionsLeft + currentQuestionIndex;
+        }
+        console.log("[Forward] Fresh API - Updated TOTAL:", TOTAL_EXPECTED_QUESTIONS);
     }
     
-    if (numberOfQuestionsLeft) {
-        // Total questions = numberOfQuestionsLeft + currentQuestionIndex + 1 (for the current question)
-        TOTAL_EXPECTED_QUESTIONS = numberOfQuestionsLeft + currentQuestionIndex;
-    }
+    console.log("[Forward] Question index:", currentQuestionIndex, "TOTAL:", TOTAL_EXPECTED_QUESTIONS, "Cached:", isCached);
 
-    // Update progress bar and text
-    const progressBar = window.parent.document.querySelector(".addy-agent-view-progress-bar-fill");
-    const progressText = window.parent.document.querySelector(".addy-agent-view-header-progress-text");
-    const progress = (currentQuestionIndex / TOTAL_EXPECTED_QUESTIONS) * 100;
-    progressBar.style.width = `${progress}%`;
-    progressBar.style.backgroundColor = data.primaryColor;
-    progressText.textContent = `${Math.round(progress)}%`;
+    // Capture and apply progress snapshot for this question
+    const progressFraction = TOTAL_EXPECTED_QUESTIONS > 0 ? currentQuestionIndex / TOTAL_EXPECTED_QUESTIONS : 0;
+    const progressPercent = Math.min(100, Math.max(0, Math.round(progressFraction * 100)));
+    const progressWidth = Math.min(100, Math.max(0, progressFraction * 100));
+    progressSnapshots[currentQuestionIndex] = { percent: progressPercent, width: progressWidth };
+    updateProgressIndicators(progressWidth, progressPercent);
 
     // If the previousQuestionsAndAnswers array is < 2, don't show the back button
     if (previousQuestionsAndAnswers.length < 1) {
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-back-button").style.display = "none";
-        // Hide the progress text
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-header-progress-text").style.display = "none";
-        // Hide the progress bar
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-progress-bar").style.display = "none";
     } else {
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-back-button").style.display = "block";
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-header-progress-text").style.display = "block";
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-progress-bar").style.display = "block";
     }
-    
-    window.isGoingBack = false;
+}
+
+function updateProgressIndicators(progressWidth, progressPercent) {
+    const agentView = window.parent.document.body.querySelector(".addy-agent-view");
+    if (!agentView) {
+        return;
+    }
+    const progressBar = agentView.querySelector(".addy-agent-view-progress-bar-fill");
+    const progressText = agentView.querySelector(".addy-agent-view-header-progress-text");
+    const progressWrapper = agentView.querySelector(".addy-agent-view-progress-bar");
+
+    if (progressBar) {
+        progressBar.style.width = `${progressWidth}%`;
+        progressBar.style.backgroundColor = data.primaryColor;
+    }
+    if (progressText) {
+        progressText.textContent = `${progressPercent}%`;
+        progressText.style.display = "block";
+    }
+    if (progressWrapper) {
+        progressWrapper.style.display = "block";
+    }
+}
+
+function applyProgressSnapshot(domIndex) {
+    if (domIndex === undefined || domIndex === null) {
+        return;
+    }
+    const snapshot = progressSnapshots[domIndex];
+    if (snapshot) {
+        updateProgressIndicators(snapshot.width, snapshot.percent);
+        return;
+    }
+    const fraction = TOTAL_EXPECTED_QUESTIONS > 0 ? domIndex / TOTAL_EXPECTED_QUESTIONS : 0;
+    const percent = Math.min(100, Math.max(0, Math.round(fraction * 100)));
+    updateProgressIndicators(Math.min(100, Math.max(0, fraction * 100)), percent);
 }
 
 function addNextButtonOnClickListener(nextQuestionElement, nextQuestion) {
     const nextButton = nextQuestionElement.querySelector(".addy-interactive-primary-button");
 
     if (nextButton) {
-        // console.log("Adding next button on click listener");
+        // Mark button as having listener to prevent duplicates
+        if (nextButton.hasAttribute('data-listener-added')) {
+            return;
+        }
+        nextButton.setAttribute('data-listener-added', 'true');
+        
         if (nextQuestion.type == "rateQuote") {
             // Change next button text to "Continue full application"
             nextButton.innerHTML = nextQuestion.nextQuestion.buttonText;
@@ -571,8 +631,6 @@ function addNextButtonOnClickListener(nextQuestionElement, nextQuestion) {
             nextQuestionElement.insertBefore(simpleParagraph, nextButton);
         }
         nextButton.addEventListener("click", () => {
-            // Remove the old click listener to prevent multiple bindings
-            nextButton.removeEventListener("click", () => getNextQuestion());
             if (nextQuestion.type == "rateQuote") {
                 // Redirect to the redirectUrl in new tab
                 window.open(nextQuestion.nextQuestion.redirectUrl, "_blank");
@@ -659,29 +717,72 @@ function listenForInteractiveResponse() {
     // Add the listener to the parent window
     window.parent.addEventListener("message", (event) => {
         if (event.data.answerSelected) {
-            // console.log("Answer selected", event.data.answerSelected);
             const question = event.data.answerSelected.question;
             const answer = event.data.answerSelected.answer;
             if (!(question && answer)) {
                 console.error("No question or answer found");
                 return;
             }
-            // Find the question in the previousQuestionsAndAnswers array or add it if it doesn't exist
-            const questionIndex = previousQuestionsAndAnswers.findIndex(q => q.question == question);
-            if (questionIndex == -1) {
-                previousQuestionsAndAnswers.push({question, answer});
-            } else {
-                previousQuestionsAndAnswers[questionIndex].answer = answer;
+            
+            // The current question's data index is currentQuestionIndex - 1
+            // (since currentQuestionIndex is the DOM index which starts at 1)
+            const currentDataIndex = currentQuestionIndex - 1;
+            
+            // Guard against edge case where no question is displayed yet
+            if (currentDataIndex < 0) {
+                console.error("[Answer] Invalid state: currentDataIndex is", currentDataIndex);
+                return;
             }
-            // Save the last known question UI state as the iframe srcdoc state
+            
+            console.log("[Answer] Question:", question, "at dataIndex:", currentDataIndex, "DOM index:", currentQuestionIndex);
+            
+            // Check if answer changed by comparing with stored answer at current position
+            let answerChanged = false;
+            if (previousQuestionsAndAnswers[currentDataIndex]) {
+                if (previousQuestionsAndAnswers[currentDataIndex].answer !== answer) {
+                    answerChanged = true;
+                    console.log("[Answer] Answer CHANGED from:", previousQuestionsAndAnswers[currentDataIndex].answer, "to:", answer);
+                }
+                previousQuestionsAndAnswers[currentDataIndex] = { question, answer };
+            } else {
+                // New question at this index
+                previousQuestionsAndAnswers[currentDataIndex] = { question, answer };
+            }
+            
+            // Save the last known question UI state
             lastKnownQuestionUIState[question] = event.data.answerSelected.uiState;
 
-            // console.log("Previous questions and answers", previousQuestionsAndAnswers);
+            // If the answer changed, clear cached states for subsequent questions
+            if (answerChanged) {
+                console.log("[AnswerChange] Clearing cache from dataIndex", currentDataIndex + 1, "onwards");
+                
+                // Clear all cached states AFTER the current question
+                // Keep indices 0 through currentDataIndex
+                interactiveSectionState = interactiveSectionState.slice(0, currentDataIndex + 1);
+                
+                // Truncate previousQuestionsAndAnswers to match
+                previousQuestionsAndAnswers = previousQuestionsAndAnswers.slice(0, currentDataIndex + 1);
+                
+                // Trim stored progress snapshots as well
+                progressSnapshots = progressSnapshots.slice(0, currentQuestionIndex + 1);
+                
+                // Remove DOM elements for questions after the current one
+                // DOM index > currentQuestionIndex means it's after the current question
+                const allQuestionElements = window.parent.document.querySelectorAll('.addy-agent-form-section');
+                allQuestionElements.forEach(el => {
+                    const elIndex = parseInt(el.getAttribute('data-question-index'));
+                    if (elIndex > currentQuestionIndex) {
+                        console.log("[AnswerChange] Removing DOM element at index", elIndex);
+                        el.remove();
+                    }
+                });
+                
+                console.log("[AnswerChange] Cache size after clear:", interactiveSectionState.length);
+            }
             
             // For selector type, get next question immediately
             // For other types, wait for the next button click
             if (event.data.answerSelected.type == "selector") {
-                // console.log("Selector type, getting next question immediately");
                 getNextQuestion();
             }
         }
@@ -695,20 +796,22 @@ async function sleep(ms) {
 async function getNextQuestion() {
     // Have a little delay for better user experience
     await sleep(300);
+    
+    console.log("[GetNext] Current index:", currentQuestionIndex, "Checking cache at index:", currentQuestionIndex);
+    
     // If we have a previously answered question at the current index, use that instead of making a new API call
     if (interactiveSectionState[currentQuestionIndex]) {
-        handleNextQuestion(interactiveSectionState[currentQuestionIndex]);
+        console.log("[GetNext] Using CACHED data for next question");
+        handleNextQuestion(interactiveSectionState[currentQuestionIndex], { isCached: true });
         return;
     }
 
-    // If it's selector, then get next question instantly without waiting to click on next button
-    // console.log("Getting next question");
+    console.log("[GetNext] No cache, making API call");
     showLoader();
     const nextQuestionResponse = await makeAPICallForNextQuestion();
-    // console.log("Next question response", nextQuestionResponse);
     if (nextQuestionResponse?.nextQuestion) {
         hideLoader();
-        handleNextQuestion(nextQuestionResponse);
+        handleNextQuestion(nextQuestionResponse, { isCached: false });
     }
 }
 
