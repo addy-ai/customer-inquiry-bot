@@ -339,11 +339,21 @@ function createWidgetCard(widget) {
         btn.style.transition = 'transform 0.3s ease';
     };
 
+    // Helper function to ensure URL has a protocol (prevents relative URL issues)
+    const ensureAbsoluteUrl = (url) => {
+        if (!url) return url;
+        // If URL doesn't start with http:// or https://, prepend https://
+        if (!/^https?:\/\//i.test(url)) {
+            return 'https://' + url;
+        }
+        return url;
+    };
+
     // Add Calendly "Book a Call" button (only if calendlyLink has actual content)
     const calendlyLink = data.leadFunnelWidgetsConfig?.calendlyLink?.trim();
     if (calendlyLink) {
         const calendlyBtn = document.createElement('a');
-        calendlyBtn.href = calendlyLink;
+        calendlyBtn.href = ensureAbsoluteUrl(calendlyLink);
         calendlyBtn.target = '_blank';
         calendlyBtn.className = 'addy-widget-secondary-btn';
         applyButtonStyles(calendlyBtn, primaryColor);
@@ -358,7 +368,7 @@ function createWidgetCard(widget) {
         const url = link.url?.trim();
         if (label && url) {
             const linkBtn = document.createElement('a');
-            linkBtn.href = url;
+            linkBtn.href = ensureAbsoluteUrl(url);
             linkBtn.target = '_blank';
             linkBtn.className = 'addy-widget-secondary-btn';
             applyButtonStyles(linkBtn, primaryColor);
