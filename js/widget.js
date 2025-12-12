@@ -322,6 +322,15 @@ function createWidgetCard(widget) {
     const extraButtonsContainer = widgetCard.querySelector('.addy-widget-extra-buttons');
     const primaryColor = data.leadFunnelWidgetsConfig?.primaryColor || data.primaryColor;
 
+    // Style the container inline (since CSS may not be updated on CDN)
+    if (extraButtonsContainer) {
+        extraButtonsContainer.style.display = 'flex';
+        extraButtonsContainer.style.flexDirection = 'column';
+        extraButtonsContainer.style.gap = '8px';
+        extraButtonsContainer.style.width = '100%';
+        extraButtonsContainer.style.marginTop = '8px';
+    }
+
     // Helper function to apply button styles inline (so it works even before CSS is updated on CDN)
     const applyButtonStyles = (btn, bgColor) => {
         btn.style.display = 'block';
