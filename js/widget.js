@@ -306,17 +306,47 @@ function endFullScreenInteractiveMode() {
 function createWidgetCard(widget) {
     let widgetCard = document.createElement("div");
     widgetCard.setAttribute("class", "addy-widget-card-parent");
-    
+
     // Create a copy of the template
     let template = widgetCardHTMLTemplate.replaceAll("{{primaryColor}}", data.primaryColor);
-    
+
     // Replace all occurrences of {{key}} with the corresponding value
     Object.keys(widget).forEach(key => {
         const regex = new RegExp(`{{${key}}}`, 'g');
         template = template.replace(regex, widget[key]);
     });
-    
+
     widgetCard.innerHTML = template;
+
+    // Add extra buttons (Calendly link and custom links)
+    const extraButtonsContainer = widgetCard.querySelector('.addy-widget-extra-buttons');
+    const primaryColor = data.leadFunnelWidgetsConfig?.primaryColor || data.primaryColor;
+
+    // Add Calendly "Book a Call" button
+    if (data.leadFunnelWidgetsConfig?.calendlyLink) {
+        const calendlyBtn = document.createElement('a');
+        calendlyBtn.href = data.leadFunnelWidgetsConfig.calendlyLink;
+        calendlyBtn.target = '_blank';
+        calendlyBtn.className = 'addy-widget-secondary-btn';
+        calendlyBtn.style.backgroundColor = primaryColor;
+        calendlyBtn.textContent = 'Book a Call';
+        extraButtonsContainer.appendChild(calendlyBtn);
+    }
+
+    // Add custom links
+    const customLinks = data.leadFunnelWidgetsConfig?.customLinks || [];
+    customLinks.forEach(link => {
+        if (link.label && link.url) {
+            const linkBtn = document.createElement('a');
+            linkBtn.href = link.url;
+            linkBtn.target = '_blank';
+            linkBtn.className = 'addy-widget-secondary-btn';
+            linkBtn.style.backgroundColor = primaryColor;
+            linkBtn.textContent = link.label;
+            extraButtonsContainer.appendChild(linkBtn);
+        }
+    });
+
     return widgetCard;
 }
 
@@ -900,9 +930,10 @@ const widgetCardHTMLTemplate = `
       <img src="{{iconImage}}" />
       <h2>{{name}}</h2>
     </div>
-    
+
     <p>{{description}}</p>
-    <button style="background-color: {{primaryColor}};">{{buttonText}}</button>
+    <button class="addy-widget-primary-btn" style="background-color: {{primaryColor}};">{{buttonText}}</button>
+    <div class="addy-widget-extra-buttons"></div>
   </div>
 `
 
