@@ -421,6 +421,36 @@ label {
     transition: 0.3s all ease;
 }
 
+.addy-widget-extra-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.addy-widget-extra-buttons:empty {
+    display: none;
+}
+
+.addy-widget-secondary-btn {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    box-sizing: border-box;
+}
+
+.addy-widget-secondary-btn:hover {
+    transform: scale(1.02);
+}
+
 .addy-widget-card-header {
     display: flex;
     gap: 20px;
