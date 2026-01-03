@@ -11,6 +11,8 @@ let currentQuestionIndex = 0;
 let lastKnownQuestionUIState = {};
 let previousWidgetIframeHeight = null;
 let progressSnapshots = [];
+let currentWidgetFallbackUrl = null;
+let fallbackTimeoutId = null;
 
 let TOTAL_EXPECTED_QUESTIONS = 15;
 const USE_MOCK_DATA = false;
@@ -113,6 +115,7 @@ window.addEventListener("load", async function () {
         // Set the interactive mode and widget id
         interactiveMode = true;
         widgetId = targetWidgetId;
+        currentWidgetFallbackUrl = widget.fallbackUrl || null;
 
         // Add icon image if not present
         if (!widget.iconImage) {
@@ -283,6 +286,7 @@ function initializeWidgets(widgetIdsToRender, agentPublicId) {
         widgetCard.querySelector("button").addEventListener("click", () => {
             interactiveMode = true;
             widgetId = widget.id;
+            currentWidgetFallbackUrl = widget.fallbackUrl || null;
             createAgentView(widget);
         });
     });
@@ -390,6 +394,12 @@ function createWidgetCard(widget) {
 }
 
 function closeTheView() {
+    // Clear any pending fallback timeout
+    if (fallbackTimeoutId) {
+        clearTimeout(fallbackTimeoutId);
+        fallbackTimeoutId = null;
+    }
+    
     // Get agent view
     const agentView = window.parent.document.body.querySelector(".addy-agent-view");
     if (agentView) {
@@ -875,9 +885,26 @@ async function getNextQuestion() {
         return;
     }
 
+    // First question fallback: if API takes > 5 seconds, redirect to fallback URL
+    const isFirstQuestion = previousQuestionsAndAnswers.length === 0;
+    if (isFirstQuestion && currentWidgetFallbackUrl) {
+        fallbackTimeoutId = setTimeout(() => {
+            console.log("[Fallback] First question took too long, redirecting to fallback URL");
+            window.open(currentWidgetFallbackUrl, '_blank');
+            closeTheView();
+        }, 5000);
+    }
+
     console.log("[GetNext] No cache, making API call");
     showLoader();
     const nextQuestionResponse = await makeAPICallForNextQuestion();
+    
+    // Clear the fallback timeout since we got a response
+    if (fallbackTimeoutId) {
+        clearTimeout(fallbackTimeoutId);
+        fallbackTimeoutId = null;
+    }
+    
     if (nextQuestionResponse?.nextQuestion) {
         hideLoader();
         handleNextQuestion(nextQuestionResponse, { isCached: false });
