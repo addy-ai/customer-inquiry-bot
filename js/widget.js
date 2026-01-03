@@ -905,10 +905,18 @@ async function getNextQuestion() {
         fallbackTimeoutId = null;
     }
     
-    if (nextQuestionResponse?.nextQuestion) {
-        hideLoader();
-        handleNextQuestion(nextQuestionResponse, { isCached: false });
+    // If API failed and this is first question with fallback URL, redirect
+    if (!nextQuestionResponse?.nextQuestion) {
+        if (isFirstQuestion && currentWidgetFallbackUrl) {
+            console.log("[Fallback] First question API failed, redirecting to fallback URL");
+            window.open(currentWidgetFallbackUrl, '_blank');
+            closeTheView();
+        }
+        return;
     }
+    
+    hideLoader();
+    handleNextQuestion(nextQuestionResponse, { isCached: false });
 }
 
 function showLoader() {
