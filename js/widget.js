@@ -393,6 +393,29 @@ function createWidgetCard(widget) {
     return widgetCard;
 }
 
+function loadFallbackInIframe(url) {
+    console.log("[Fallback] Loading fallback URL in iframe:", url);
+    const agentView = window.parent.document.body.querySelector(".addy-agent-view");
+    if (!agentView) return;
+    
+    // Clear the content area and add iframe
+    const contentArea = agentView.querySelector(".addy-agent-view-content");
+    if (contentArea) {
+        contentArea.innerHTML = `
+            <iframe 
+                src="${url}" 
+                style="width: 100%; height: 100%; border: none; flex: 1;"
+                allow="geolocation; microphone; camera"
+            ></iframe>
+        `;
+        contentArea.style.width = "100%";
+        contentArea.style.height = "100%";
+    }
+    
+    // Hide the loader
+    hideLoader();
+}
+
 function closeTheView() {
     // Clear any pending fallback timeout
     if (fallbackTimeoutId) {
@@ -890,9 +913,8 @@ async function getNextQuestion() {
     console.log("[Fallback] Debug - isFirstQuestion:", isFirstQuestion, "fallbackUrl:", currentWidgetFallbackUrl);
     if (isFirstQuestion && currentWidgetFallbackUrl) {
         fallbackTimeoutId = setTimeout(() => {
-            console.log("[Fallback] First question took too long, redirecting to fallback URL");
-            window.open(currentWidgetFallbackUrl, '_blank');
-            closeTheView();
+            console.log("[Fallback] First question took too long, loading fallback URL");
+            loadFallbackInIframe(currentWidgetFallbackUrl);
         }, 5000);
     }
 
@@ -909,9 +931,8 @@ async function getNextQuestion() {
     // If API failed and this is first question with fallback URL, redirect
     if (!nextQuestionResponse?.nextQuestion) {
         if (isFirstQuestion && currentWidgetFallbackUrl) {
-            console.log("[Fallback] First question API failed, redirecting to fallback URL");
-            window.open(currentWidgetFallbackUrl, '_blank');
-            closeTheView();
+            console.log("[Fallback] First question API failed, loading fallback URL");
+            loadFallbackInIframe(currentWidgetFallbackUrl);
         }
         return;
     }
