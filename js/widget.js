@@ -887,6 +887,7 @@ async function getNextQuestion() {
 
     // First question fallback: if API takes > 5 seconds, redirect to fallback URL
     const isFirstQuestion = previousQuestionsAndAnswers.length === 0;
+    console.log("[Fallback] Debug - isFirstQuestion:", isFirstQuestion, "fallbackUrl:", currentWidgetFallbackUrl);
     if (isFirstQuestion && currentWidgetFallbackUrl) {
         fallbackTimeoutId = setTimeout(() => {
             console.log("[Fallback] First question took too long, redirecting to fallback URL");
