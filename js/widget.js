@@ -603,6 +603,9 @@ function handleNextQuestion(nextQuestion, options = {}) {
         if (lastQuestionElement) {
             lastQuestionElement.style.display = "none";
         }
+        // Set progress to 100% on completion
+        updateProgressIndicators(100, 100);
+        
         // Create success screen
         const successScreen = createSuccessScreen(nextQuestion);
         // Close button on click listener
