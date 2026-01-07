@@ -631,7 +631,14 @@ function handleNextQuestion(nextQuestion, options = {}) {
         successScreen.querySelector(".addy-interactive-primary-button").addEventListener("click", () => {
             if (currentWidgetSuccessUrl) {
                 console.log("[Success] Close button clicked, redirecting to:", currentWidgetSuccessUrl);
-                window.location.href = currentWidgetSuccessUrl;
+                // Use window.top to navigate the parent page (works for iframe embeds)
+                try {
+                    window.top.location.href = currentWidgetSuccessUrl;
+                } catch (e) {
+                    // Cross-origin fallback: open in new tab if top navigation is blocked
+                    console.log("[Success] Top navigation blocked, opening in new tab");
+                    window.open(currentWidgetSuccessUrl, "_blank");
+                }
             } else {
                 console.log("[Success] Close button clicked, no successUrl - closing view");
                 closeTheView();
