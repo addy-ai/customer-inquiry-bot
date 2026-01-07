@@ -625,25 +625,17 @@ function handleNextQuestion(nextQuestion, options = {}) {
             }
         }
         
-        // Create success screen
-        const successScreen = createSuccessScreen(nextQuestion);
-        // Close button on click listener - redirect to successUrl if available
-        successScreen.querySelector(".addy-interactive-primary-button").addEventListener("click", () => {
-            if (currentWidgetSuccessUrl) {
-                console.log("[Success] Close button clicked, redirecting to:", currentWidgetSuccessUrl);
-                // Use window.top to navigate the parent page (works for iframe embeds)
-                try {
-                    window.top.location.href = currentWidgetSuccessUrl;
-                } catch (e) {
-                    // Cross-origin fallback: open in new tab if top navigation is blocked
-                    console.log("[Success] Top navigation blocked, opening in new tab");
-                    window.open(currentWidgetSuccessUrl, "_blank");
-                }
-            } else {
+        // Create success screen - pass successUrl to render <a> tag if available
+        const successScreen = createSuccessScreen(nextQuestion, currentWidgetSuccessUrl);
+        
+        // Only add click listener if no successUrl (button element)
+        // If successUrl exists, the <a> tag handles navigation natively via href
+        if (!currentWidgetSuccessUrl) {
+            successScreen.querySelector(".addy-interactive-primary-button").addEventListener("click", () => {
                 console.log("[Success] Close button clicked, no successUrl - closing view");
                 closeTheView();
-            }
-        });
+            });
+        }
         
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-content").appendChild(successScreen);
         return;
@@ -1038,7 +1030,7 @@ async function makeAPICallForNextQuestion() {
     return response;
 }
 
-function createSuccessScreen(nextQuestion) {
+function createSuccessScreen(nextQuestion, successUrl) {
     // Parse next question as JSON
     if (typeof nextQuestion.nextQuestion == "string") {
         nextQuestion.nextQuestion = JSON.parse(nextQuestion.nextQuestion);
@@ -1050,8 +1042,22 @@ function createSuccessScreen(nextQuestion) {
         .replaceAll("{{message}}", nextQuestion.nextQuestion.message)
         .replaceAll("{{closeButtonText}}", nextQuestion.nextQuestion.closeButtonText)
         .replaceAll("{{checkIcon}}", "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/check_green.svg");
-    // Update the close button primary color
-    successScreen.querySelector(".addy-interactive-primary-button").style.backgroundColor = data.primaryColor;
+    
+    // If successUrl exists, replace button with anchor tag
+    if (successUrl) {
+        const button = successScreen.querySelector(".addy-interactive-primary-button");
+        const anchor = document.createElement("a");
+        anchor.href = successUrl;
+        anchor.target = "_top"; // Navigate parent page (works in iframes)
+        anchor.className = button.className;
+        anchor.textContent = button.textContent.trim();
+        anchor.style.cssText = button.style.cssText + "text-decoration: none; display: inline-block; text-align: center;";
+        anchor.style.backgroundColor = data.primaryColor;
+        button.replaceWith(anchor);
+    } else {
+        // Update the close button primary color
+        successScreen.querySelector(".addy-interactive-primary-button").style.backgroundColor = data.primaryColor;
+    }
     return successScreen;
 }
 
