@@ -12,6 +12,7 @@ let lastKnownQuestionUIState = {};
 let previousWidgetIframeHeight = null;
 let progressSnapshots = [];
 let currentWidgetFallbackUrl = null;
+let currentWidgetSuccessUrl = null;
 let fallbackTimeoutId = null;
 
 let TOTAL_EXPECTED_QUESTIONS = 15;
@@ -116,6 +117,7 @@ window.addEventListener("load", async function () {
         interactiveMode = true;
         widgetId = targetWidgetId;
         currentWidgetFallbackUrl = widget.fallbackUrl || null;
+        currentWidgetSuccessUrl = widget.successUrl || null;
 
         // Add icon image if not present
         if (!widget.iconImage) {
@@ -287,6 +289,7 @@ function initializeWidgets(widgetIdsToRender, agentPublicId) {
             interactiveMode = true;
             widgetId = widget.id;
             currentWidgetFallbackUrl = widget.fallbackUrl || null;
+            currentWidgetSuccessUrl = widget.successUrl || null;
             createAgentView(widget);
         });
     });
@@ -606,11 +609,21 @@ function handleNextQuestion(nextQuestion, options = {}) {
         // Set progress to 100% on completion
         updateProgressIndicators(100, 100);
         
+        // If successUrl exists, hide X button to force user to use close button
+        if (currentWidgetSuccessUrl) {
+            const xButton = window.parent.document.body.querySelector(".addy-agent-view .addy-close-button");
+            if (xButton) xButton.style.display = "none";
+        }
+        
         // Create success screen
         const successScreen = createSuccessScreen(nextQuestion);
-        // Close button on click listener
+        // Close button on click listener - redirect to successUrl if available
         successScreen.querySelector(".addy-interactive-primary-button").addEventListener("click", () => {
-            closeTheView();
+            if (currentWidgetSuccessUrl) {
+                window.location.href = currentWidgetSuccessUrl;
+            } else {
+                closeTheView();
+            }
         });
         
         window.parent.document.body.querySelector(".addy-agent-view").querySelector(".addy-agent-view-content").appendChild(successScreen);
