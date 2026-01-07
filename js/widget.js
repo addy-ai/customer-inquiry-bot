@@ -616,7 +616,13 @@ function handleNextQuestion(nextQuestion, options = {}) {
         if (currentWidgetSuccessUrl) {
             console.log("[Success] Hiding X button, user must use close button");
             const xButton = window.parent.document.body.querySelector(".addy-agent-view .addy-close-button");
-            if (xButton) xButton.style.display = "none";
+            console.log("[Success] X button element found:", xButton);
+            if (xButton) {
+                xButton.style.setProperty("display", "none", "important");
+                console.log("[Success] X button hidden successfully");
+            } else {
+                console.log("[Success] ERROR: X button not found!");
+            }
         }
         
         // Create success screen
