@@ -118,6 +118,7 @@ window.addEventListener("load", async function () {
         widgetId = targetWidgetId;
         currentWidgetFallbackUrl = widget.fallbackUrl || null;
         currentWidgetSuccessUrl = widget.successUrl || null;
+        console.log("[Success] Widget started - successUrl:", currentWidgetSuccessUrl);
 
         // Add icon image if not present
         if (!widget.iconImage) {
@@ -290,6 +291,7 @@ function initializeWidgets(widgetIdsToRender, agentPublicId) {
             widgetId = widget.id;
             currentWidgetFallbackUrl = widget.fallbackUrl || null;
             currentWidgetSuccessUrl = widget.successUrl || null;
+            console.log("[Success] Widget started - successUrl:", currentWidgetSuccessUrl);
             createAgentView(widget);
         });
     });
@@ -610,7 +612,9 @@ function handleNextQuestion(nextQuestion, options = {}) {
         updateProgressIndicators(100, 100);
         
         // If successUrl exists, hide X button to force user to use close button
+        console.log("[Success] endOfFlow reached - successUrl:", currentWidgetSuccessUrl);
         if (currentWidgetSuccessUrl) {
+            console.log("[Success] Hiding X button, user must use close button");
             const xButton = window.parent.document.body.querySelector(".addy-agent-view .addy-close-button");
             if (xButton) xButton.style.display = "none";
         }
@@ -620,8 +624,10 @@ function handleNextQuestion(nextQuestion, options = {}) {
         // Close button on click listener - redirect to successUrl if available
         successScreen.querySelector(".addy-interactive-primary-button").addEventListener("click", () => {
             if (currentWidgetSuccessUrl) {
+                console.log("[Success] Close button clicked, redirecting to:", currentWidgetSuccessUrl);
                 window.location.href = currentWidgetSuccessUrl;
             } else {
+                console.log("[Success] Close button clicked, no successUrl - closing view");
                 closeTheView();
             }
         });
