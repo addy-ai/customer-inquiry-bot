@@ -1037,11 +1037,35 @@ function createSuccessScreen(nextQuestion, successUrl) {
     }
     const successScreen = document.createElement("div");
     successScreen.setAttribute("class", "addy-agent-form-section addy-agent-success-screen");
-    successScreen.innerHTML = successScreenHTML
+    // const showRateQuote = nextQuestion.nextQuestion.showRateQuote || false;  
+    const showRateQuote = true; // TODO: Remove this after testing
+
+    successScreen.innerHTML = successScreenHTML(showRateQuote)
         .replaceAll("{{title}}", nextQuestion.nextQuestion.title)
         .replaceAll("{{message}}", nextQuestion.nextQuestion.message)
         .replaceAll("{{closeButtonText}}", nextQuestion.nextQuestion.closeButtonText)
         .replaceAll("{{checkIcon}}", "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/check_green.svg");
+
+    // Replace rate quote variables if showRateQuote is true
+    if (showRateQuote) {
+        const rq = nextQuestion.nextQuestion.rateQuote || {};
+        // test data for rq
+        rq.rate = "3.5%";
+        rq.loanAmount = "$100,000";
+        rq.fundsAvailableDate = "January 24, 2026";
+        rq.loanType = "5/1 ARM";
+        rq.closeTime = "7-8 days";
+        rq.nextStepsTitle = "What happens next?";
+        rq.nextStepsMessage = "Your loan expert will be in touch soon to finalize your amazing rate.";
+        successScreen.innerHTML = successScreen.innerHTML
+            .replaceAll("{{rate}}", rq.rate || "")
+            .replaceAll("{{loanAmount}}", rq.loanAmount || "")
+            .replaceAll("{{fundsAvailableDate}}", rq.fundsAvailableDate || "")
+            .replaceAll("{{loanType}}", rq.loanType || "")
+            .replaceAll("{{closeTime}}", rq.closeTime || "")
+            .replaceAll("{{nextStepsTitle}}", rq.nextStepsTitle || "")
+            .replaceAll("{{nextStepsMessage}}", rq.nextStepsMessage || "");
+    }
     
     // If successUrl exists, replace button with anchor tag
     if (successUrl) {
@@ -1081,20 +1105,77 @@ const nextQuestionHTMLTemplate = `
     </div>
 `
 
-const successScreenHTML = `
-    <div class="addy-agent-form-section-header" style="display: flex; flex-direction: column; align-items: center;">
-        <div class="addy-agent-form-section-header-avatar-container" style="display: flex; gap: 15px; align-items: start; flex-direction: column; align-items: center;">
-            <img width="30" height="30" src="{{checkIcon}}" />
-            <h2 class="addy-agent-form-section-question" style="text-align: center; margin-top: 0px;">{{title}}</h2>
+function successScreenHTML(showRateQuote) {
+    return `
+    <div class="addy-agent-form-section-header" style="display: flex; flex-direction: column; align-items: center; border-radius: 16px; overflow: hidden; padding-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);">
+        <div class="addy-agent-form-section-header-avatar-container" style="display: flex; align-items: start; flex-direction: column; align-items: center; background-color: #10b77f; padding: 30px;">
+            <div style="margin-bottom: 1rem; width: 100%; display: flex; gap: 10px; align-items: center;">
+                <img width="30" height="30" src="{{checkIcon}}" />
+                <span style="color: rgba(255, 255, 255, 0.8);">Congratulations!</span>
+            </div>
+        
+            <h2 clsass="addy-agent-form-section-question" style="margin: 0px; margin-bottom: 0.5rem; width: 100%; text-align: left !important; color: rgba(255, 255, 255, 1) !important; text-align: center; margin-top: 0px;">{{title}}</h2>
+
+            <p style="font-size: 14px; width: 100%; text-align: left !important; color: rgba(255, 255, 255, 0.8) !important; margin-top: 0px; max-width: 100%;">{{message}}</p>
         </div>
-
-        <p style="margin-bottom: 30px; margin-top: 0px; text-align: center; max-width: 80%;">{{message}}</p>
-
+        <br />
+        ${!showRateQuote ? '<br /> <br /> <br />' : ''}
+        ${showRateQuote ? `
+            <div style="width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; padding: 0 16px;">
+                
+                <!-- Main Rate Card -->
+                <div style="background: #FFFFFF; border-radius: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06); padding: 24px 28px; width: 100%; box-sizing: border-box;">
+                    
+                    <!-- Rate and Loan Amount Row -->
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                        <!-- Your Rate Column -->
+                        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                            <span style="font-size: 14px; font-weight: 400; color: #6B7280; margin-bottom: 4px; font-family: 'Inter', -apple-system, sans-serif;">Your Rate</span>
+                            <span style="font-size: 32px; font-weight: 600; color: #10B981; line-height: 1.1; font-family: 'Inter', -apple-system, sans-serif;">{{rate}}</span>
+                        </div>
+                        
+                        <!-- Loan Amount Column -->
+                        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                            <span style="font-size: 14px; font-weight: 400; color: #6B7280; margin-bottom: 4px; font-family: 'Inter', -apple-system, sans-serif;">Loan Amount</span>
+                            <span style="font-size: 32px; font-weight: 600; color: #1F2937; line-height: 1.1; font-family: 'Inter', -apple-system, sans-serif;">{{loanAmount}}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Funds Available Banner -->
+                    <div style="background: rgba(248, 198, 48, 0.1); border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgb(248, 198, 48)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-4 h-4" style="color: hsl(var(--celebrate-accent));"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path><path d="M4 17v2"></path><path d="M5 18H3"></path></svg>
+                        <span style="font-size: 14px; font-weight: 500; color: #1F2937; font-family: 'Inter', -apple-system, sans-serif;">Funds available by {{fundsAvailableDate}}</span>
+                    </div>
+                </div>
+                
+                <!-- Loan Type Bar -->
+                <div style="background: #F3F4F6; border-radius: 12px; padding: 16px 20px; text-align: center;">
+                    <span style="font-size: 14px; font-weight: 400; color: #6B7280; font-family: 'Inter', -apple-system, sans-serif;">{{loanType}} • Close in {{closeTime}}</span>
+                </div>
+                
+                <!-- What Happens Next Card -->
+                <div style="background: #ECFDF5; border-radius: 16px; padding: 20px 24px; display: flex; align-items: flex-start; gap: 16px;">
+                    <!-- Green Checkmark Circle -->
+                    <div style="width: 44px; height: 44px; min-width: 44px; background: #10B981; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5 13L9 17L19 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    
+                    <!-- Text Content -->
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <span style="font-size: 16px; font-weight: 600; color: #1F2937; font-family: 'Inter', -apple-system, sans-serif;">{{nextStepsTitle}}</span>
+                        <span style="font-size: 14px; font-weight: 400; color: #4B5563; line-height: 1.4; font-family: 'Inter', -apple-system, sans-serif;">{{nextStepsMessage}}</span>
+                    </div>
+                </div>
+                
+            </div> </br> </br>` : ''}
         <button class="addy-interactive-primary-button" style="max-width: 80%;">
             {{closeButtonText}}
         </button>
     </div>
 `;
+}
 
 const privacyPolicyAndTermsOfServiceHTML = `
     <div style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
