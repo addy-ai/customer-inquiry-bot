@@ -359,34 +359,32 @@ function createWidgetCard(widget) {
     };
 
     // Add Calendly "Book a Call" button (only if calendlyLink has actual content)
-    const calendlyLink = data.leadFunnelWidgetsConfig?.calendlyLink?.trim();
-    if (calendlyLink) {
-        return;
-        const calendlyBtn = document.createElement('a');
-        calendlyBtn.href = ensureAbsoluteUrl(calendlyLink);
-        calendlyBtn.target = '_blank';
-        calendlyBtn.className = 'addy-widget-secondary-btn';
-        applyButtonStyles(calendlyBtn, primaryColor);
-        calendlyBtn.textContent = 'Book a Call';
-        extraButtonsContainer.appendChild(calendlyBtn);
-    }
+    // const calendlyLink = data.leadFunnelWidgetsConfig?.calendlyLink?.trim();
+    // if (calendlyLink) {
+    //     const calendlyBtn = document.createElement('a');
+    //     calendlyBtn.href = ensureAbsoluteUrl(calendlyLink);
+    //     calendlyBtn.target = '_blank';
+    //     calendlyBtn.className = 'addy-widget-secondary-btn';
+    //     applyButtonStyles(calendlyBtn, primaryColor);
+    //     calendlyBtn.textContent = 'Book a Call';
+    //     extraButtonsContainer.appendChild(calendlyBtn);
+    // }
 
     // Add custom links (only if both label and url have actual content)
-    const customLinks = data.leadFunnelWidgetsConfig?.customLinks || [];
-    customLinks.forEach(link => {
-        return;
-        const label = link.label?.trim();
-        const url = link.url?.trim();
-        if (label && url) {
-            const linkBtn = document.createElement('a');
-            linkBtn.href = ensureAbsoluteUrl(url);
-            linkBtn.target = '_blank';
-            linkBtn.className = 'addy-widget-secondary-btn';
-            applyButtonStyles(linkBtn, primaryColor);
-            linkBtn.textContent = label;
-            extraButtonsContainer.appendChild(linkBtn);
-        }
-    });
+    // const customLinks = data.leadFunnelWidgetsConfig?.customLinks || [];
+    // customLinks.forEach(link => {
+    //     const label = link.label?.trim();
+    //     const url = link.url?.trim();
+    //     if (label && url) {
+    //         const linkBtn = document.createElement('a');
+    //         linkBtn.href = ensureAbsoluteUrl(url);
+    //         linkBtn.target = '_blank';
+    //         linkBtn.className = 'addy-widget-secondary-btn';
+    //         applyButtonStyles(linkBtn, primaryColor);
+    //         linkBtn.textContent = label;
+    //         extraButtonsContainer.appendChild(linkBtn);
+    //     }
+    // });
 
     return widgetCard;
 }
