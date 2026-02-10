@@ -331,15 +331,6 @@ function createWidgetCard(widget) {
     const extraButtonsContainer = widgetCard.querySelector('.addy-widget-extra-buttons');
     const primaryColor = data.leadFunnelWidgetsConfig?.primaryColor || data.primaryColor;
 
-    // Style the container inline (since CSS may not be updated on CDN)
-    if (extraButtonsContainer) {
-        extraButtonsContainer.style.display = 'flex';
-        extraButtonsContainer.style.flexDirection = 'column';
-        extraButtonsContainer.style.gap = '8px';
-        extraButtonsContainer.style.width = '100%';
-        extraButtonsContainer.style.marginTop = '8px';
-    }
-
     // Helper function to apply button styles inline (so it works even before CSS is updated on CDN)
     const applyButtonStyles = (btn, bgColor) => {
         btn.style.display = 'block';
@@ -370,6 +361,7 @@ function createWidgetCard(widget) {
     // Add Calendly "Book a Call" button (only if calendlyLink has actual content)
     const calendlyLink = data.leadFunnelWidgetsConfig?.calendlyLink?.trim();
     if (calendlyLink) {
+        return;
         const calendlyBtn = document.createElement('a');
         calendlyBtn.href = ensureAbsoluteUrl(calendlyLink);
         calendlyBtn.target = '_blank';
@@ -382,6 +374,7 @@ function createWidgetCard(widget) {
     // Add custom links (only if both label and url have actual content)
     const customLinks = data.leadFunnelWidgetsConfig?.customLinks || [];
     customLinks.forEach(link => {
+        return;
         const label = link.label?.trim();
         const url = link.url?.trim();
         if (label && url) {
