@@ -1070,7 +1070,7 @@ const widgetCardHTMLTemplate = `
 
     <p>{{description}}</p>
     <button class="addy-widget-primary-btn" style="background-color: {{primaryColor}};">{{buttonText}}</button>
-    <div class="addy-widget-extra-buttons"></div>
+    <div class="addy-widget-extra-buttons" style="display: none;"></div>
   </div>
 `
 
