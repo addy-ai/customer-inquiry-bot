@@ -25,6 +25,16 @@ function getAgentApiBaseUrl(env) {
     return "https://backend-prod-zquodzeuva-uc.a.run.app/api/agent";
 }
 
+function getChatbotMountContainer() {
+    const scriptParent = scriptTag?.parentElement;
+    if (scriptParent?.getAttribute("addy-chatbot-id") === scriptTag.id) {
+        return scriptParent;
+    }
+
+    const chatbotContainer = document.querySelector(`[addy-chatbot-id="${scriptTag.id}"]`);
+    return chatbotContainer || document.body;
+}
+
 // console.log("Bubble script loaded");
 
 // 0. Init the steps
@@ -40,11 +50,11 @@ window.addEventListener("load", async function () {
         }
         // console.table({ data })
 
-        // 2. Create Chatbox and append to body
+        // 2. Create Chatbox and append to the chatbot mount container
         let chatbox = createChatbox(data);
         // console.log("Chatbox created");
 
-        // 3. Create Bubble Components and append to body, to toggle chatbox
+        // 3. Create Bubble Components and append to the same container, to toggle chatbox
         createBubbleComponents(chatbox, data);
         // console.log("Bubble components created");
 
@@ -180,7 +190,7 @@ function createChatbox(data) {
     });
 
     chatBox.innerHTML = `<iframe src="${url}" style="width: 100%; height: 100%; border: none;"></iframe>`;
-    document.body.append(chatBox);
+    getChatbotMountContainer().append(chatBox);
 
     function handleSmallScreens() {
         window.innerHeight < 600 && (chatBox.style.height = "70vh");
@@ -282,7 +292,7 @@ function createBubbleComponents(chatbox, data) {
     let chatIcon = createChatIcon(); bubble.append(chatIcon);
     let closeIcon = createCloseIcon(); bubble.append(closeIcon);
     let notification = createNotification(); bubble.append(notification);
-    document.body.append(bubble);
+    getChatbotMountContainer().append(bubble);
 
     // Event listeners
     bubble.addEventListener("mouseenter", () => { bubble.style.transform = "scale(1.05)"; });
