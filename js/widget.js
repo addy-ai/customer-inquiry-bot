@@ -43,6 +43,19 @@ let mockData = {
 
 let backendAPI;
 
+function getAgentApiBaseUrl(env) {
+    if (env === "test") {
+        return "http://127.0.0.1:5003/addy-ai-dev/us-central1/api/agent";
+    }
+    if (env === "test-local" || env === "local") {
+        return "http://localhost:8080/api/agent";
+    }
+    if (env === "development") {
+        return "https://backend-dev-u5fn3il7zq-uc.a.run.app/api/agent";
+    }
+    return "https://backend-prod-zquodzeuva-uc.a.run.app/api/agent";
+}
+
 window.addEventListener("load", async function () {
     data = await getChatBotData();
     if (!data) {
@@ -145,20 +158,7 @@ const iconImageLookup = {
 
 async function getChatBotData() {
     let env = scriptTag?.getAttribute("env") || "development";
-    let backend = url = window.location.host === ''
-        ? "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer/bot-info-public"
-        : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer/bot-info-public"
-    if (env == "development") {
-        backend = "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer/bot-info-public";
-    }
-    if (env == "test") {
-        backend = "http://127.0.0.1:5003/addy-ai-dev/us-central1/businessInference/infer/bot-info-public";
-    }
-    if (env == "test-local") {
-        backend = "http://localhost:8080/embeddingsInference/infer/bot-info-public";
-    }
-    // backend =
-    //   "http://127.0.0.1:5003/addy-ai-dev/us-central1/businessInference/infer/bot-info-public";
+    const backend = `${getAgentApiBaseUrl(env)}/public-chatbot-info`;
     const publicId = scriptTag.id;
     const host = window.location.host;
     const data = await fetch(`${backend}/?publicId=${publicId}&host=${host}`, {
