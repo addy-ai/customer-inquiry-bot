@@ -12,6 +12,13 @@ function getHostedChatbotBaseUrl(env) {
     return "https://app.addy.so";
 }
 
+function getHostedChatbotPageUrl(env) {
+    if ((env === "test" || env === "test-local" || env === "local") && scriptTag?.src) {
+        return new URL("../index.html", scriptTag.src).toString();
+    }
+    return "https://addy-ai.github.io/customer-inquiry-bot";
+}
+
 function getAgentApiBaseUrl(env) {
     if (env === "test") {
         return "http://127.0.0.1:5003/addy-ai-dev/us-central1/api/agent";
@@ -168,7 +175,10 @@ function updateIframeHeightToItsContent(iframe) {
 // 2. Create the Chatbox which is shown on-click
 function createChatbox(data) {
     const env = scriptTag?.getAttribute("env") || data?.env || "production";
-    const url = `${getHostedChatbotBaseUrl(env)}/chatbot/${encodeURIComponent(scriptTag.id)}`;
+    const params = new URLSearchParams();
+    params.set("data", encodeURIComponent(JSON.stringify(data)));
+    params.set("env", env);
+    const url = `${getHostedChatbotPageUrl(env)}?${params.toString()}`;
 
     /*
     console.table({host:window.location.host, path:window.location.pathname, url, 'scriptTag': scriptTag.id}) 
