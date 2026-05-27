@@ -146,10 +146,6 @@ label {
     width: 100%;
 }
 
-.bot-message-container.bot-message-pending {
-    display: none;
-}
-
 .bot-message,
 .user-message {
     background-color: var(--user-message-color);
