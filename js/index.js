@@ -123,7 +123,7 @@ window.onload = async function() {
         }
 
         // Defaults
-        data.avatarURL ||= "https://i.imgur.com/9VBT3XI.png";
+        data.appImageURL ||= "https://i.imgur.com/9VBT3XI.png";
         data.name ||= "My Chatbot";
         data.chatbotName ||= "Addy";
         data.welcomeMessage ||= "Hello! How can I help you today?";
