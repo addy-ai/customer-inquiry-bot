@@ -2,6 +2,46 @@ const scriptTag = document.currentScript;
 window.chatbotScriptLoaded = false;
 window.isChatbotFirstClick = true;
 
+function getHostedChatbotBaseUrl(env) {
+    if (env === "test" || env === "test-local" || env === "local") {
+        return "http://localhost:3000";
+    }
+    if (env === "development") {
+        return "https://devmail.addy.so";
+    }
+    return "https://app.addy.so";
+}
+
+function getHostedChatbotPageUrl(env) {
+    if ((env === "test" || env === "test-local" || env === "local") && scriptTag?.src) {
+        return new URL("../index.html", scriptTag.src).toString();
+    }
+    return "https://addy-ai.github.io/customer-inquiry-bot";
+}
+
+function getAgentApiBaseUrl(env) {
+    if (env === "test") {
+        return "http://127.0.0.1:5003/addy-ai-dev/us-central1/api/agent";
+    }
+    if (env === "test-local" || env === "local") {
+        return "http://localhost:8080/api/agent";
+    }
+    if (env === "development") {
+        return "https://backend-dev-u5fn3il7zq-uc.a.run.app/api/agent";
+    }
+    return "https://backend-prod-zquodzeuva-uc.a.run.app/api/agent";
+}
+
+function getChatbotMountContainer() {
+    const scriptParent = scriptTag?.parentElement;
+    if (scriptParent?.getAttribute("addy-chatbot-id") === scriptTag.id) {
+        return scriptParent;
+    }
+
+    const chatbotContainer = document.querySelector(`[addy-chatbot-id="${scriptTag.id}"]`);
+    return chatbotContainer || document.body;
+}
+
 // console.log("Bubble script loaded");
 
 // 0. Init the steps
@@ -17,11 +57,11 @@ window.addEventListener("load", async function () {
         }
         // console.table({ data })
 
-        // 2. Create Chatbox and append to body
+        // 2. Create Chatbox and append to the chatbot mount container
         let chatbox = createChatbox(data);
         // console.log("Chatbox created");
 
-        // 3. Create Bubble Components and append to body, to toggle chatbox
+        // 3. Create Bubble Components and append to the same container, to toggle chatbox
         createBubbleComponents(chatbox, data);
         // console.log("Bubble components created");
 
@@ -35,20 +75,7 @@ window.addEventListener("load", async function () {
 // 1. Retrieve Business Information passing scriptTag.id, location.host, and a retrieved or created uuid to Backend.
 async function getChatBotData() {
     let env = scriptTag?.getAttribute("env") || "development";
-    let backend = url = window.location.host === ''
-        ? "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer/bot-info-public"
-        : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer/bot-info-public"
-    if (env == "development") {
-        backend = "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer/bot-info-public";
-    }
-    if (env == "test") {
-        backend = "http://127.0.0.1:5003/addy-ai-dev/us-central1/businessInference/infer/bot-info-public";
-    }
-    if (env == "test-local") {
-        backend = "http://localhost:8080/embeddingsInference/infer/bot-info-public";
-    }
-    // backend =
-    //   "http://127.0.0.1:5003/addy-ai-dev/us-central1/businessInference/infer/bot-info-public";
+    const backend = `${getAgentApiBaseUrl(env)}/public-chatbot-info`;
     const publicId = scriptTag.id;
     const host = window.location.host;
     const data = await fetch(`${backend}/?publicId=${publicId}&host=${host}`, {
@@ -147,10 +174,11 @@ function updateIframeHeightToItsContent(iframe) {
 
 // 2. Create the Chatbox which is shown on-click
 function createChatbox(data) {
-    let slug = `?publicId=${scriptTag.id}&header=none&data=${encodeURIComponent(JSON.stringify(data))}`
-    const url = window.location.host === ''
-        ? `file://${window.location.pathname.replace('testpage.html', 'index.html')}${slug}`
-        : `https://addy-ai.github.io/customer-inquiry-bot/${slug}`;
+    const env = scriptTag?.getAttribute("env") || data?.env || "production";
+    const params = new URLSearchParams();
+    params.set("data", encodeURIComponent(JSON.stringify(data)));
+    params.set("env", env);
+    const url = `${getHostedChatbotPageUrl(env)}?${params.toString()}`;
 
     /*
     console.table({host:window.location.host, path:window.location.pathname, url, 'scriptTag': scriptTag.id}) 
@@ -172,7 +200,7 @@ function createChatbox(data) {
     });
 
     chatBox.innerHTML = `<iframe src="${url}" style="width: 100%; height: 100%; border: none;"></iframe>`;
-    document.body.append(chatBox);
+    getChatbotMountContainer().append(chatBox);
 
     function handleSmallScreens() {
         window.innerHeight < 600 && (chatBox.style.height = "70vh");
@@ -274,7 +302,7 @@ function createBubbleComponents(chatbox, data) {
     let chatIcon = createChatIcon(); bubble.append(chatIcon);
     let closeIcon = createCloseIcon(); bubble.append(closeIcon);
     let notification = createNotification(); bubble.append(notification);
-    document.body.append(bubble);
+    getChatbotMountContainer().append(bubble);
 
     // Event listeners
     bubble.addEventListener("mouseenter", () => { bubble.style.transform = "scale(1.05)"; });

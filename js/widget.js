@@ -17,6 +17,7 @@ let fallbackTimeoutId = null;
 
 let TOTAL_EXPECTED_QUESTIONS = 15;
 const USE_MOCK_DATA = false;
+const DEFAULT_ASSISTANT_AVATAR_URL = "https://i.imgur.com/9VBT3XI.png";
 let mockData = {
     leadFunnelWidgetsConfig: {
         heroSection: {
@@ -43,6 +44,19 @@ let mockData = {
 
 let backendAPI;
 
+function getAgentApiBaseUrl(env) {
+    if (env === "test") {
+        return "http://127.0.0.1:5003/addy-ai-dev/us-central1/api/agent";
+    }
+    if (env === "test-local" || env === "local") {
+        return "http://localhost:8080/api/agent";
+    }
+    if (env === "development") {
+        return "https://backend-dev-u5fn3il7zq-uc.a.run.app/api/agent";
+    }
+    return "https://backend-prod-zquodzeuva-uc.a.run.app/api/agent";
+}
+
 window.addEventListener("load", async function () {
     data = await getChatBotData();
     if (!data) {
@@ -56,6 +70,8 @@ window.addEventListener("load", async function () {
     // Set the data object
     data.env = env;
     data.mode = mode;
+    data.avatarURL ||= data.appImageURL || DEFAULT_ASSISTANT_AVATAR_URL;
+    data.appImageURL ||= data.avatarURL;
     data.primaryColor = data?.leadFunnelWidgetsConfig?.primaryColor || data?.primaryColor || "#745DDE";
     
     // Initialize leadFunnelWidgetsConfig for home mode if not present
@@ -122,7 +138,7 @@ window.addEventListener("load", async function () {
 
         // Add icon image if not present
         if (!widget.iconImage) {
-            widget.iconImage = iconImageLookup[targetWidgetId] || "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/home.svg";
+            widget.iconImage = data.avatarURL || DEFAULT_ASSISTANT_AVATAR_URL;
         }
 
         // Trigger the widget view
@@ -137,28 +153,9 @@ window.addEventListener("load", async function () {
     console.log('[Addy Widget] Trigger widgets programmatically using: window.addyTriggerWidget("widget-id")');
 });
 
-const iconImageLookup = {
-    "refinance": "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/reload.svg",
-    "buy-home": "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/home.svg",
-    "rates": "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/chart.svg",
-}
-
 async function getChatBotData() {
     let env = scriptTag?.getAttribute("env") || "development";
-    let backend = url = window.location.host === ''
-        ? "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer/bot-info-public"
-        : "https://us-central1-hey-addy-chatgpt.cloudfunctions.net/businessInference/infer/bot-info-public"
-    if (env == "development") {
-        backend = "https://us-central1-addy-ai-dev.cloudfunctions.net/businessInference/infer/bot-info-public";
-    }
-    if (env == "test") {
-        backend = "http://127.0.0.1:5003/addy-ai-dev/us-central1/businessInference/infer/bot-info-public";
-    }
-    if (env == "test-local") {
-        backend = "http://localhost:8080/embeddingsInference/infer/bot-info-public";
-    }
-    // backend =
-    //   "http://127.0.0.1:5003/addy-ai-dev/us-central1/businessInference/infer/bot-info-public";
+    const backend = `${getAgentApiBaseUrl(env)}/public-chatbot-info`;
     const publicId = scriptTag.id;
     const host = window.location.host;
     const data = await fetch(`${backend}/?publicId=${publicId}&host=${host}`, {
@@ -172,6 +169,8 @@ async function getChatBotData() {
         if (!data.success) throw new Error("Error: No data found");
         const dataWithWidgets = {
             ...data?.data?.config,
+            name: data?.data?.name,
+            avatarURL: data?.data?.avatarURL,
             leadFunnelWidgets: data?.data?.leadFunnelWidgets,
             leadFunnelWidgetsConfig: data?.data?.leadFunnelWidgetsConfig,
         }
@@ -269,7 +268,7 @@ function initializeWidgets(widgetIdsToRender, agentPublicId) {
         }
         console.log("Widget id to render", widget.id);
         const widgetCard = createWidgetCard({...widget,
-            iconImage: iconImageLookup[widget.id] || "https://cdn.jsdelivr.net/gh/addy-ai/customer-inquiry-bot@latest/img/icons/home.svg"
+            iconImage: widget.iconImage || data.avatarURL || DEFAULT_ASSISTANT_AVATAR_URL
         });
         // Find all elements where addy-widget-id = agentPublicId  && widgets == scriptTag.widgets
         let widgetCardContainers = document.body.querySelectorAll(`[addy-widget-id="${agentPublicId}"][widgets="${scriptTag.getAttribute("widgets")}"]`);
