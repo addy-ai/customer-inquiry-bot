@@ -123,7 +123,8 @@ window.onload = async function() {
         }
 
         // Defaults
-        data.appImageURL ||= "https://i.imgur.com/9VBT3XI.png";
+        data.avatarURL ||= data.appImageURL || "https://i.imgur.com/9VBT3XI.png";
+        data.appImageURL ||= data.avatarURL;
         data.name ||= "My Chatbot";
         data.chatbotName ||= "Addy";
         data.welcomeMessage ||= "Hello! How can I help you today?";
@@ -217,15 +218,19 @@ function addMessageToChat(message, type) {
 function createBotMessageElement(message) {
   const messageId = `bot-message-${Date.now()}`;
   const messageElem = document.createElement("div");
+  const isPendingMessage = message === "...";
 
-  messageElem.setAttribute("class", "bot-message-container");
+  messageElem.setAttribute(
+    "class",
+    `bot-message-container${isPendingMessage ? " bot-message-pending" : ""}`
+  );
 
   //   const formattedMessage = marked.parse(message);
 
   let innerHTML = chatbotMessageHTML.replace("{{messageId}}", messageId);
   innerHTML = innerHTML.replace("{{chatbotName}}", data.chatbotName);
   innerHTML = innerHTML.replace("{{chatbotAvatarURL}}", data.avatarURL);
-  innerHTML = innerHTML.replace("{{message}}", message === "..." ? thinkingDotsMarkup : markdownToSafeHtml(message));
+  innerHTML = innerHTML.replace("{{message}}", isPendingMessage ? "" : markdownToSafeHtml(message));
   messageElem.innerHTML = innerHTML;
 
   chatHistory.append(messageElem);
@@ -248,6 +253,7 @@ function appendBotMessageElement(message, messageId, isStreaming = false) {
 
   // Convert objects to JSON string for better debugging
   if (messageElem) {
+    messageElem.closest(".bot-message-pending")?.classList.remove("bot-message-pending");
     try {
       if (typeof message === "object" && message.emailString) {
         messageElem.innerHTML = markdownToSafeHtml(message.emailString);
@@ -510,6 +516,8 @@ async function getChatBotData(publicId) {
         if (!data.success) throw new Error("Error: No data found");
         const dataWithWidgets = {
             ...data?.data?.config,
+            name: data?.data?.name,
+            avatarURL: data?.data?.avatarURL,
             leadFunnelWidgets: data?.data?.leadFunnelWidgets,
             leadFunnelWidgetsConfig: data?.data?.leadFunnelWidgetsConfig,
         }

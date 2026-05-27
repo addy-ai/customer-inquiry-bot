@@ -146,6 +146,10 @@ label {
     width: 100%;
 }
 
+.bot-message-container.bot-message-pending {
+    display: none;
+}
+
 .bot-message,
 .user-message {
     background-color: var(--user-message-color);
@@ -269,7 +273,7 @@ label {
 }
 
 .input-container.is-streaming .streaming-indicator {
-    display: inline-flex;
+    display: none;
 }
 
 .thinking-dots {
@@ -658,6 +662,14 @@ label {
     display: flex;
     gap: 20px;
     align-items: center;
+}
+
+.addy-widget-card-header img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
 }
 
 .addy-widget-card-container {
