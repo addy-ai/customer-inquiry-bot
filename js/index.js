@@ -201,19 +201,15 @@ function addMessageToChat(message, type) {
 function createBotMessageElement(message) {
   const messageId = `bot-message-${Date.now()}`;
   const messageElem = document.createElement("div");
-  const isPendingMessage = message === "...";
 
-  messageElem.setAttribute(
-    "class",
-    `bot-message-container${isPendingMessage ? " bot-message-pending" : ""}`
-  );
+  messageElem.setAttribute("class", "bot-message-container");
 
   //   const formattedMessage = marked.parse(message);
 
   let innerHTML = chatbotMessageHTML.replace("{{messageId}}", messageId);
   innerHTML = innerHTML.replace("{{chatbotName}}", data.chatbotName);
   innerHTML = innerHTML.replace("{{chatbotAvatarURL}}", data.avatarURL);
-  innerHTML = innerHTML.replace("{{message}}", isPendingMessage ? "" : markdownToSafeHtml(message));
+  innerHTML = innerHTML.replace("{{message}}", message === "..." ? thinkingDotsMarkup : markdownToSafeHtml(message));
   messageElem.innerHTML = innerHTML;
 
   chatHistory.append(messageElem);
@@ -236,7 +232,6 @@ function appendBotMessageElement(message, messageId, isStreaming = false) {
 
   // Convert objects to JSON string for better debugging
   if (messageElem) {
-    messageElem.closest(".bot-message-pending")?.classList.remove("bot-message-pending");
     try {
       if (typeof message === "object" && message.emailString) {
         messageElem.innerHTML = markdownToSafeHtml(message.emailString);
