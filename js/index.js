@@ -558,7 +558,7 @@ const chatbotThinking = `
             <img src="{{chatbotAvatarURL}}" alt="chatbot"/>
         </div>
         <div class="bot-message">
-            <p>thinking...</p>
+            ${thinkingDotsMarkup}
         </div>
     </div>
 `;
