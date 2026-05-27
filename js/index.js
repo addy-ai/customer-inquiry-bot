@@ -8,16 +8,6 @@ let data = JSON.parse(decodeURIComponent(urlParams.get("data")));
 let env = urlParams.get("env");
 let suggestedPromptClicked = null;
 
-function getHostedChatbotBaseUrl(env) {
-  if (env === "test" || env === "test-local" || env === "local") {
-    return "http://localhost:3000";
-  }
-  if (env === "development") {
-    return "https://devmail.addy.so";
-  }
-  return "https://app.addy.so";
-}
-
 function getAgentApiBaseUrl(env) {
   if (env === "test") {
     return "http://127.0.0.1:5003/addy-ai-dev/us-central1/api/agent";
@@ -29,13 +19,6 @@ function getAgentApiBaseUrl(env) {
     return "https://backend-dev-u5fn3il7zq-uc.a.run.app/api/agent";
   }
   return "https://backend-prod-zquodzeuva-uc.a.run.app/api/agent";
-}
-
-const publicIdFromUrl = urlParams.get("publicId");
-if (publicIdFromUrl && !urlParams.get("data")) {
-  window.location.replace(
-    `${getHostedChatbotBaseUrl(env)}/chatbot/${encodeURIComponent(publicIdFromUrl)}`
-  );
 }
 
 console.log("Data from URL", data)
