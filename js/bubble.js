@@ -89,6 +89,7 @@ async function getChatBotData() {
         if (!data.success) throw new Error("Error: No data found");
         const dataWithWidgets = {
             ...data?.data?.config,
+            avatarURL: data?.data?.avatarURL,
             leadFunnelWidgets: data?.data?.leadFunnelWidgets,
             leadFunnelWidgetsConfig: data?.data?.leadFunnelWidgetsConfig,
         }

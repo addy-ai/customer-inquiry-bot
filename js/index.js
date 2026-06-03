@@ -421,7 +421,7 @@ async function onSendButtonClick() {
             if (eventName === "chunk" && payload.content) {
               fullMessage += payload.content;
               appendBotMessageElement(fullMessage, messageId, true);
-            } else if (eventName === "final_response" && payload.content && !fullMessage) {
+            } else if (eventName === "final_response" && payload.content) {
               fullMessage = payload.content;
               appendBotMessageElement(fullMessage, messageId, false);
             } else if (eventName === "error") {
