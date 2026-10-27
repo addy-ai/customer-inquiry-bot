@@ -61,6 +61,10 @@ window.addEventListener("load", async function () {
     data = await getChatBotData();
     if (!data) {
         console.error("Error: No data found");
+        // Only the hosted lead page owns the whole document; an embed must not wipe its host site
+        if (scriptTag.getAttribute("mode") === "home") {
+            renderLeadPageUnavailable();
+        }
         return;
     };
     // console.log("Data", data);
@@ -188,6 +192,16 @@ async function getChatBotData() {
     data.host = window.location.host;
     data.env = env;
     return data;
+}
+
+function renderLeadPageUnavailable() {
+    document.body.innerHTML = `
+        <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+            <h2>This page isn't available</h2>
+            <p>This lead capture page hasn't been published yet or is no longer available.</p>
+            <p>Please check the link, or contact the person who shared it with you.</p>
+        </div>
+    `;
 }
 
 function renderHeroSection(heroData) {
