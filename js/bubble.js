@@ -7,9 +7,9 @@ function getHostedChatbotBaseUrl(env) {
         return "http://localhost:3000";
     }
     if (env === "development") {
-        return "https://devmail.addy.so";
+        return "https://devmail.addy.com";
     }
-    return "https://app.addy.so";
+    return "https://app.addy.com";
 }
 
 function getHostedChatbotPageUrl(env) {
